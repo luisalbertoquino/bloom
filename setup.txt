@@ -1,0 +1,44 @@
+# Instrucciones para clonar y configurar el proyecto BLOOM
+
+## 1. Clonar el repositorio
+git clone https://github.com/luisalbertoquino/bloom.git
+cd bloom
+
+## 2. Backend (Laravel)
+
+### 2.1. Instalar dependencias
+cd backend
+composer install
+
+### 2.2. Configurar entorno
+cp .env.example .env
+php artisan key:generate
+
+### 2.3. Crear Base de Datos
+- Crear manualmente una base de datos llamada: bloom_db
+- Editar el archivo `.env` para configurar los datos de conexión:
+
+DB_CONNECTION=mysql DB_HOST=127.0.0.1 DB_PORT=3306 DB_DATABASE=bloom_db DB_USERNAME=root DB_PASSWORD=tu_password
+
+
+### 2.4. Migrar Base de Datos
+php artisan migrate --seed
+
+### 2.5. Crear enlace simbólico para archivos públicos
+php artisan storage:link
+
+### 2.6. Iniciar servidor de desarrollo
+php artisan serve
+
+## 3. Frontend (Angular)
+
+### 3.1. Instalar dependencias
+cd ../frontend
+npm install
+
+### 3.2. Iniciar servidor Angular
+npm start
+
+---
+
+Listo, el backend estará en http://127.0.0.1:8000 y el frontend en http://localhost:4200

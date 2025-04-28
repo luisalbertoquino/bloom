@@ -40,10 +40,38 @@ class AuthController extends Controller
      */
     public function logout(Request $request)
     {
-        // Revocar el token actual
-        $request->user()->currentAccessToken()->delete();
-
-        return response()->json(['message' => 'Sesión cerrada correctamente']);
+        try {
+            // Verificar si el usuario está autenticado con un token personal
+            $user = $request->user();
+            
+            if ($user) {
+                // Verificar si el token es un token personal (no transitorio)
+                $currentToken = $user->currentAccessToken();
+                
+                // Solo intentar borrar si es un token personal y no transitorio
+                if ($currentToken && method_exists($currentToken, 'delete')) {
+                    $currentToken->delete();
+                }
+            }
+            
+            // Cerrar sesión en la guard web también (para cookies)
+            Auth::guard('web')->logout();
+            
+            // Invalidar la sesión
+            if ($request->session()) {
+                $request->session()->invalidate();
+                $request->session()->regenerateToken();
+            }
+            
+            return response()->json(['message' => 'Sesión cerrada correctamente']);
+            
+        } catch (\Exception $e) {
+            // Loguear el error
+            \Log::error('Error during logout: ' . $e->getMessage());
+            
+            // Devolver un mensaje amigable
+            return response()->json(['message' => 'Ocurrió un error al cerrar la sesión'], 500);
+        }
     }
 
     /**

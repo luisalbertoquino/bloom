@@ -1,0 +1,21 @@
+/* Gradiente personalizado al estilo Angular */
+.angular-gradient {
+  background: linear-gradient(145deg, #DD0031 0%, #C3002F 30%, #9C27B0 60%, #3F51B5 100%);
+}
+
+/* Animación sutil (opcional) */
+.header-title {
+  position: relative;
+  
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: -8px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 60px;
+    height: 3px;
+    background-color: white;
+    border-radius: 3px;
+  }
+}

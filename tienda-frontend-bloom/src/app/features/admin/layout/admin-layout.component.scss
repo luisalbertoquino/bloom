@@ -1,0 +1,44 @@
+/* src/app/features/admin/layout/admin-layout.component.scss */
+
+// Estilo para la barra lateral
+aside {
+    min-height: 100vh;
+    transition: width 0.3s ease;
+  }
+  
+  // Estilo para los elementos activos en el menú lateral
+  .router-link-active {
+    background-color: var(--color-primary);
+    color: white;
+  }
+  
+  // Animar transiciones del menú
+  .transition-all {
+    transition-property: all;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    transition-duration: 300ms;
+  }
+  
+  // Para que el contenido principal ocupe todo el espacio disponible
+  .flex-1 {
+    flex: 1 1 0%;
+  }
+  
+  // Estilo para scroll interno
+  .overflow-y-auto {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(156, 163, 175, 0.5) rgba(243, 244, 246, 0.1);
+  }
+  
+  .overflow-y-auto::-webkit-scrollbar {
+    width: 5px;
+  }
+  
+  .overflow-y-auto::-webkit-scrollbar-track {
+    background: rgba(243, 244, 246, 0.1);
+  }
+  
+  .overflow-y-auto::-webkit-scrollbar-thumb {
+    background-color: rgba(156, 163, 175, 0.5);
+    border-radius: 20px;
+  }

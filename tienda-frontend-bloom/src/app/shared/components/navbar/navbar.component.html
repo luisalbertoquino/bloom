@@ -1,0 +1,109 @@
+<!-- src/app/shared/components/navbar/navbar.component.html -->
+<nav class="bg-gray-800 bg-opacity-50 shadow-md py-4 fixed top-0 left-0 w-full z-10">
+  <div class="container mx-auto px-4 flex justify-between items-center">
+    <!-- Logo -->
+    <div class="flex items-center">
+      <a [routerLink]="['/']" class="flex items-center">
+        <img [src]="logoUrl" alt="Bloom Accesorios" class="h-10 w-auto">
+        <span class="ml-2 text-xl font-semibold text-white">{{ siteTitle }}</span>
+      </a>
+    </div>
+
+    <!-- Navegación principal (móvil: oculto, desktop: visible) -->
+    <div class="hidden md:flex items-center space-x-6">
+      <a [routerLink]="['/']" routerLinkActive="text-primary" [routerLinkActiveOptions]="{exact: true}" 
+        class="text-white hover:text-primary transition">Inicio</a>
+      <a [routerLink]="['/productos']" routerLinkActive="text-primary" 
+        class="text-white hover:text-primary transition">Productos</a>
+      <a [routerLink]="['/blog']" routerLinkActive="text-primary" 
+        class="text-white hover:text-primary transition">Blog</a>
+    </div>
+
+    <!-- Iconos derecha -->
+    <div class="flex items-center space-x-4">
+      <!-- Botón de búsqueda -->
+      <button (click)="toggleSearch()" class="text-white hover:text-primary transition">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+        </svg>
+      </button>
+
+      <!-- Botón de login/usuario -->
+      <div class="relative">
+        <button (click)="toggleLoginModal()" class="text-white hover:text-primary transition">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+          </svg>
+        </button>
+        
+        <!-- Menú de usuario (visible solo cuando isUserMenuOpen es true) -->
+        <div *ngIf="isAuthenticated && isUserMenuOpen" 
+             class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-10">
+          <a [routerLink]="['/admin']" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+            Panel de administración
+          </a>
+          <a [routerLink]="['/perfil']" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+            Mi perfil
+          </a>
+          <button (click)="logout()" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+            Cerrar sesión
+          </button>
+        </div>
+      </div>
+      
+      <!-- Carrito con contador -->
+      <button (click)="toggleCart()" class="text-white hover:text-primary transition relative">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+        </svg>
+        <span *ngIf="cartItemCount > 0" 
+          class="absolute -top-2 -right-2 bg-primary text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+          {{ cartItemCount }}
+        </span>
+      </button>
+
+      <!-- Botón menú móvil -->
+      <button (click)="toggleMobileMenu()" class="md:hidden text-white hover:text-primary transition">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- Menú móvil (oculto por defecto) -->
+  <div *ngIf="isMobileMenuOpen" class="md:hidden py-2 px-4">
+    <div class="flex flex-col space-y-3">
+      <a [routerLink]="['/']" routerLinkActive="text-primary" [routerLinkActiveOptions]="{exact: true}" 
+        class="text-white hover:text-primary transition py-2">Inicio</a>
+      <a [routerLink]="['/productos']" routerLinkActive="text-primary" 
+        class="text-white hover:text-primary transition py-2">Productos</a>
+      <a [routerLink]="['/blog']" routerLinkActive="text-primary" 
+        class="text-white hover:text-primary transition py-2">Blog</a>
+      <a *ngIf="!isAuthenticated" [routerLink]="['/login']" routerLinkActive="text-primary" 
+        class="text-white hover:text-primary transition py-2">Iniciar sesión</a>
+      <a *ngIf="isAuthenticated" [routerLink]="['/admin']" routerLinkActive="text-primary" 
+        class="text-white hover:text-primary transition py-2">Panel de administración</a>
+      <button *ngIf="isAuthenticated" (click)="logout()" 
+        class="text-left text-white hover:text-primary transition py-2">Cerrar sesión</button>
+    </div>
+  </div>
+
+  <!-- Búsqueda (oculta por defecto) -->
+  <div *ngIf="isSearchOpen" class="container mx-auto px-4 py-4">
+    <div class="relative">
+      <form (ngSubmit)="search()">
+        <input type="text" [(ngModel)]="searchQuery" name="searchQuery" placeholder="Buscar productos..." 
+          class="text-primary w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
+        <button type="submit" class="absolute right-3 top-2 text-gray-500 hover:text-primary">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Popup del carrito -->
+  <app-cart-popup [isVisible]="isCartOpen" (closeCart)="toggleCart()"></app-cart-popup>
+</nav>

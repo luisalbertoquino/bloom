@@ -1,0 +1,83 @@
+<!-- src/app/features/store/product-category/product-category.component.html -->
+<div class="flex flex-col min-h-screen">
+    <!-- Navbar -->
+    <app-navbar></app-navbar>
+  
+    <!-- Estado de carga -->
+    <div *ngIf="isLoading" class="flex justify-center items-center py-20">
+      <div class="flex flex-col items-center">
+        <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+        <p class="mt-4 text-gray-600">Cargando productos...</p>
+      </div>
+    </div>
+  
+    <!-- Mensaje de error -->
+    <div *ngIf="errorMessage" class="container mx-auto px-4 py-20">
+      <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+        <p>{{ errorMessage }}</p>
+        <a routerLink="/productos" class="text-primary hover:underline mt-2 inline-block">
+          Volver a productos
+        </a>
+      </div>
+    </div>
+  
+    <!-- Contenido principal (solo se muestra cuando no está cargando y no hay error) -->
+    <div *ngIf="!isLoading && !errorMessage && category" class="flex-grow">
+      <!-- Encabezado de la página -->
+      <div class="bg-gray-100 py-8">
+        <div class="container mx-auto px-4">
+          <h1 class="text-3xl font-bold text-gray-800">{{ category.name }}</h1>
+          
+          <!-- Breadcrumb -->
+          <nav class="mt-4">
+            <ol class="flex text-sm text-gray-600">
+              <li>
+                <a routerLink="/" class="hover:text-primary">Inicio</a>
+              </li>
+              <li class="mx-2">/</li>
+              <li>
+                <a routerLink="/productos" class="hover:text-primary">Productos</a>
+              </li>
+              <li class="mx-2">/</li>
+              <li class="text-primary">{{ category.name }}</li>
+            </ol>
+          </nav>
+        </div>
+      </div>
+  
+      <!-- Lista de productos -->
+      <section class="container mx-auto my-12 px-4">
+        <h2 class="text-2xl font-bold mb-8 text-gray-800">Productos Destacados</h2>
+        
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+          <!-- Usando el componente reutilizable de tarjeta de producto -->
+          <app-product-card 
+            *ngFor="let product of products" 
+            [product]="product"
+            [storageUrl]="storageUrl"
+            (viewDetails)="viewProductDetails($event)"
+            (quickView)="quickView($event)"
+            (addToCart)="addToCart($event)"
+            (buyNow)="buyNow($event)">
+          </app-product-card>
+        </div>
+        
+        <!-- Botón para ver todos los productos -->
+        <div class="text-center mt-8">
+          <a [routerLink]="['/productos']" class="inline-block bg-primary text-white py-2 px-6 rounded-lg hover:bg-primary-dark transition-colors">
+            Ver todos los productos
+          </a>
+        </div>
+      </section>
+    </div>
+  
+    <!-- Footer -->
+    <app-footer></app-footer>
+
+     <!-- Componente Quick View Modal -->
+    <app-product-quick-view 
+      [product]="selectedProduct" 
+      [isVisible]="showQuickView"
+      (close)="closeQuickView()">
+    </app-product-quick-view>
+  </div>

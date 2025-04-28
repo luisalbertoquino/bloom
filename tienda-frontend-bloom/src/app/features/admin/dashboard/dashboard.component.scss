@@ -1,0 +1,59 @@
+/* src/app/features/admin/dashboard/dashboard.component.scss */
+
+// Estilo para los menús de tabla
+.overflow-x-auto {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(156, 163, 175, 0.5) rgba(243, 244, 246, 0.1);
+}
+
+.overflow-x-auto::-webkit-scrollbar {
+  height: 5px;
+}
+
+.overflow-x-auto::-webkit-scrollbar-track {
+  background: rgba(243, 244, 246, 0.1);
+}
+
+.overflow-x-auto::-webkit-scrollbar-thumb {
+  background-color: rgba(156, 163, 175, 0.5);
+  border-radius: 20px;
+}
+
+// Efecto hover para filas de tabla
+tr.hover\:bg-gray-50:hover {
+  transition: background-color 0.2s ease;
+}
+
+// Animación para botones de estado
+button.px-3 {
+  transition: all 0.2s ease-in-out;
+  
+  &:hover {
+    transform: translateY(-1px);
+  }
+  
+  &:active {
+    transform: translateY(1px);
+  }
+}
+
+// Animación para mensajes de notificación
+.bg-green-100, .bg-red-100 {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+// Mejoras para gráficos de barras
+.bg-primary {
+  transition: width 0.5s ease-in-out;
+}

@@ -1,0 +1,69 @@
+<!-- src/app/features/store/blog-list/blog-list.component.html -->
+<div class="flex flex-col min-h-screen">
+  <!-- Navbar -->
+  <app-navbar></app-navbar>
+
+  <!-- Estado de carga -->
+  <div *ngIf="isLoading" class="flex justify-center items-center py-20">
+    <div class="flex flex-col items-center">
+      <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+      <p class="mt-4 text-gray-600">Cargando artículos...</p>
+    </div>
+  </div>
+
+  <!-- Contenido principal (solo se muestra cuando no está cargando) -->
+  <div *ngIf="!isLoading" class="flex-grow">
+    <!-- Encabezado con gradiente estilo Angular -->
+    <div class="w-full bg-gradient-to-r from-red-500 via-purple-500 to-blue-500 py-8">
+    
+    </div>
+
+    <!-- Contenido principal (solo se muestra cuando no está cargando) -->
+
+    <div *ngIf="!isLoading" class="flex-grow">
+      <!-- Encabezado de la página -->
+      <div class="bg-gray-100 py-7">
+        <div class="container mx-auto px-4">
+          <!-- Breadcrumb -->
+          <nav>
+            <ol class="flex text-sm text-gray-600">
+              <li>
+                <a routerLink="/" class="hover:text-primary">Inicio</a>
+              </li>
+              <li class="mx-2">/</li>
+              <li class="text-primary">Blog</li>
+            </ol>
+          </nav>
+        </div>
+      </div>
+
+    <!-- Lista de artículos -->
+    <section class="container mx-auto my-8 px-4">
+      <h1 class="text-3xl font-bold text-gray-800 mb-6">Blog</h1>
+      <p class="text-gray-600 mb-8">Tendencias, consejos y novedades sobre accesorios</p>
+      
+      <!-- Grid de artículos -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div *ngFor="let post of blogPosts" class="bg-white rounded-lg shadow-md overflow-hidden">
+          <img [src]="getImageUrl(post.banner_image)" [alt]="post.title" 
+               class="w-full h-48 object-cover">
+          <div class="p-6">
+            <h2 class="text-xl font-bold text-gray-800 mb-3">{{ post.title }}</h2>
+            <p class="text-gray-600 mb-4">{{ getExcerpt(post.content) }}</p>
+            <a [routerLink]="['/blog', post.id]" class="text-primary font-medium hover:underline">
+              Leer más →
+            </a>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Si no hay artículos -->
+      <div *ngIf="blogPosts.length === 0" class="text-center py-12">
+        <p class="text-gray-600 text-lg">No hay artículos disponibles actualmente.</p>
+      </div>
+    </section>
+  </div>
+
+  <!-- Footer -->
+  <app-footer></app-footer>
+</div>

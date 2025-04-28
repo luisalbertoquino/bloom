@@ -1,0 +1,65 @@
+/* src/app/features/admin/settings/settings.component.scss */
+
+// Personalización de los controles de color
+input[type="color"] {
+    -webkit-appearance: none;
+    border: none;
+    width: 40px;
+    height: 40px;
+    cursor: pointer;
+    background: none;
+    
+    &::-webkit-color-swatch-wrapper {
+      padding: 0;
+    }
+    
+    &::-webkit-color-swatch {
+      border: 1px solid #ddd;
+      border-radius: 4px;
+    }
+  }
+  
+  // Animación para los mensajes de éxito/error
+  .bg-green-100, .bg-red-100 {
+    animation: fadeIn 0.3s ease-in-out;
+  }
+  
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  // Estilizar la carga de archivos
+  input[type="file"] {
+    cursor: pointer;
+  }
+  
+  // Mejorar apariencia de previsualizaciones de imágenes
+  .w-16, .w-24 {
+    img {
+      object-fit: contain;
+      transition: transform 0.3s ease;
+      
+      &:hover {
+        transform: scale(1.1);
+      }
+    }
+  }
+  
+  // Añadir estilo a los componentes de previsualización de colores
+  .flex-1 {
+    &.p-4 {
+      transition: all 0.3s ease;
+      
+      &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      }
+    }
+  }

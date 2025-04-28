@@ -1,0 +1,43 @@
+// src/styles.scss
+@use 'tailwindcss';
+
+// Definimos variables CSS para los colores
+:root {
+  --color-primary: #fc6280;
+  --color-primary-dark: #e5486a;
+  --color-secondary: #f8a5c2;
+}
+
+// Extendemos Tailwind con nuestros colores
+@layer utilities {
+  .text-primary {
+    color: var(--color-primary);
+  }
+  
+  .bg-primary {
+    background-color: var(--color-primary);
+  }
+  
+  .hover\:bg-primary-dark:hover {
+    background-color: var(--color-primary-dark);
+  }
+  
+  .hover\:text-primary:hover {
+    color: var(--color-primary);
+  }
+  
+  .border-primary {
+    border-color: var(--color-primary);
+  }
+  
+  .focus\:ring-primary:focus {
+    --tw-ring-color: var(--color-primary);
+  }
+}
+
+// Estilo global para la transición
+.transition {
+  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform, filter, backdrop-filter;
+  transition-duration: 300ms;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}

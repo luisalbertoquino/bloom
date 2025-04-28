@@ -1,0 +1,103 @@
+<!-- src/app/features/store/product-list/product-list.component.html -->
+<div class="flex flex-col min-h-screen">
+  <!-- Navbar -->
+  <app-navbar></app-navbar>
+
+  <!-- Estado de carga -->
+  <div *ngIf="isLoading" class="flex justify-center items-center py-20">
+    <div class="flex flex-col items-center">
+      <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+      <p class="mt-4 text-gray-600">Cargando productos...</p>
+    </div>
+  </div>
+
+  <!-- Contenido principal (solo se muestra cuando no está cargando) -->
+  <div *ngIf="!isLoading" class="flex-grow">
+    <!-- Encabezado con gradiente estilo Angular -->
+    <div class="w-full bg-gradient-to-r from-red-500 via-purple-500 to-blue-500 py-8">
+ 
+    </div>
+
+    <div *ngIf="!isLoading" class="flex-grow">
+      <!-- Encabezado de la página -->
+      <div class="bg-gray-100 py-7">
+        <div class="container mx-auto px-4">
+          <!-- Breadcrumb -->
+          <nav>
+            <ol class="flex text-sm text-gray-600">
+              <li>
+                <a routerLink="/" class="hover:text-primary">Inicio</a>
+              </li>
+              <li class="mx-2">/</li>
+              <li class="text-primary">Productos</li>
+            </ol>
+          </nav>
+        </div>
+      </div>
+
+    <!-- Lista de productos -->
+    <section class="container mx-auto my-8 px-4">
+      <!-- Filtros (opcional) -->
+      <div class="mb-8 flex flex-wrap items-center justify-between">
+        <div class="mb-4 md:mb-0">
+          <span class="text-gray-600">{{ products.length }} productos encontrados</span>
+        </div>
+        
+        <div class="flex items-center space-x-4">
+          <label for="sort" class="text-gray-600">Ordenar por:</label>
+          <select id="sort" class="border border-gray-300 rounded px-3 py-1 focus:outline-none focus:ring-1 focus:ring-primary">
+            <option value="newest">Más recientes</option>
+            <option value="price-asc">Precio: menor a mayor</option>
+            <option value="price-desc">Precio: mayor a menor</option>
+            <option value="name-asc">Nombre: A-Z</option>
+            <option value="name-desc">Nombre: Z-A</option>
+          </select>
+        </div>
+      </div>
+      
+      <!-- Grid de productos -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+        <app-product-card 
+        *ngFor="let product of products" 
+        [product]="product"
+        [storageUrl]="storageUrl"
+        (viewDetails)="viewProductDetails($event)"
+        (quickView)="quickView($event)"
+        (addToCart)="addToCart($event)"
+        (buyNow)="buyNow($event)">
+      </app-product-card>
+      </div>
+      
+      <!-- Paginación (opcional) -->
+      <div class="flex justify-center mt-12">
+        <nav class="flex items-center">
+          <button class="px-3 py-1 rounded-l border border-gray-300 bg-white text-gray-600 hover:bg-gray-50">
+            Anterior
+          </button>
+          <button class="px-3 py-1 border-t border-b border-gray-300 bg-primary text-white">
+            1
+          </button>
+          <button class="px-3 py-1 border-t border-b border-gray-300 bg-white text-gray-600 hover:bg-gray-50">
+            2
+          </button>
+          <button class="px-3 py-1 border-t border-b border-gray-300 bg-white text-gray-600 hover:bg-gray-50">
+            3
+          </button>
+          <button class="px-3 py-1 rounded-r border border-gray-300 bg-white text-gray-600 hover:bg-gray-50">
+            Siguiente
+          </button>
+        </nav>
+      </div>
+    </section>
+  </div>
+
+  <!-- Footer -->
+  <app-footer></app-footer>
+
+  <!-- Componente Quick View Modal -->
+  <app-product-quick-view 
+  [product]="selectedProduct" 
+  [isVisible]="showQuickView"
+  (close)="closeQuickView()">
+</app-product-quick-view>
+</div>

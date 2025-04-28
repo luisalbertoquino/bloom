@@ -1,0 +1,259 @@
+<!-- src/app/features/admin/settings/settings.component.html -->
+<div class="bg-white shadow-sm rounded-lg">
+    <!-- Encabezado -->
+    <div class="px-6 py-4 border-b border-gray-200">
+      <h1 class="text-xl font-semibold text-gray-800">Configuración del Sitio</h1>
+      <p class="text-gray-600 mt-1">Personaliza las configuraciones generales de tu tienda online.</p>
+    </div>
+  
+    <!-- Mensajes de éxito/error -->
+    <div *ngIf="successMessage" class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 m-4 rounded">
+      {{ successMessage }}
+    </div>
+    <div *ngIf="errorMessage" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 m-4 rounded">
+      {{ errorMessage }}
+    </div>
+  
+    <!-- Estado de carga -->
+    <div *ngIf="isLoading" class="flex justify-center items-center p-12">
+      <div class="flex flex-col items-center">
+        <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+        <p class="mt-4 text-gray-600">Cargando configuración...</p>
+      </div>
+    </div>
+  
+    <!-- Formulario de configuración -->
+    <div *ngIf="!isLoading" class="p-6">
+      <form [formGroup]="settingsForm" (ngSubmit)="onSubmit()">
+        <!-- Sección: Información General -->
+        <div class="mb-8">
+          <h2 class="text-lg font-medium text-gray-800 mb-4 pb-2 border-b border-gray-200">Información General</h2>
+          
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Título del sitio -->
+            <div>
+              <label for="site_title" class="block text-sm font-medium text-gray-700 mb-1">Título del sitio *</label>
+              <input type="text" id="site_title" formControlName="site_title" 
+                     class="w-full border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
+              <div *ngIf="settingsForm.get('site_title')?.touched && settingsForm.get('site_title')?.invalid" class="text-red-500 text-sm mt-1">
+                El título del sitio es obligatorio.
+              </div>
+            </div>
+            
+            <!-- Texto del pie de página -->
+            <div>
+              <label for="footer_text" class="block text-sm font-medium text-gray-700 mb-1">Texto del pie de página *</label>
+              <textarea id="footer_text" formControlName="footer_text" rows="3"
+                        class="w-full border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"></textarea>
+              <div *ngIf="settingsForm.get('footer_text')?.touched && settingsForm.get('footer_text')?.invalid" class="text-red-500 text-sm mt-1">
+                El texto del pie de página es obligatorio.
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Sección: Imágenes -->
+        <div class="mb-8">
+          <h2 class="text-lg font-medium text-gray-800 mb-4 pb-2 border-b border-gray-200">Imágenes</h2>
+          
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Logo -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Logo</label>
+              <div class="flex items-center space-x-4">
+                <div *ngIf="logoPreview" class="w-16 h-16 overflow-hidden rounded-md">
+                  <img [src]="logoPreview" alt="Logo Preview" class="w-full h-full object-cover">
+                </div>
+                <div class="flex-1">
+                  <input type="file" id="logo" (change)="onLogoSelected($event)" accept="image/*"
+                         class="w-full border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
+                  <p class="text-gray-500 text-xs mt-1">Formatos soportados: JPG, PNG. Máximo 2MB.</p>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Banner principal -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Banner principal</label>
+              <div class="flex items-center space-x-4">
+                <div *ngIf="bannerPreview" class="w-24 h-16 overflow-hidden rounded-md">
+                  <img [src]="bannerPreview" alt="Banner Preview" class="w-full h-full object-cover">
+                </div>
+                <div class="flex-1">
+                  <input type="file" id="banner_image" (change)="onBannerSelected($event)" accept="image/*"
+                         class="w-full border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
+                  <p class="text-gray-500 text-xs mt-1">Formatos soportados: JPG, PNG. Máximo 2MB. Dimensiones recomendadas: 1920x400px.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Favicon</label>
+          <div class="flex items-center space-x-4">
+            <div *ngIf="faviconPreview" class="w-8 h-8 overflow-hidden rounded-md">
+              <img [src]="faviconPreview" alt="Favicon Preview" class="w-full h-full object-cover">
+            </div>
+            <div class="flex-1">
+              <input type="file" id="favicon" (change)="onFaviconSelected($event)" accept="image/x-icon,image/png"
+                     class="w-full border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
+              <p class="text-gray-500 text-xs mt-1">Formatos soportados: ICO, PNG. Tamaño recomendado: 32x32px o 16x16px.</p>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Sección: Colores del tema -->
+        <div class="mb-8">
+          <h2 class="text-lg font-medium text-gray-800 mb-4 pb-2 border-b border-gray-200">Colores del tema</h2>
+          
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Color primario -->
+            <div>
+              <label for="primary_color" class="block text-sm font-medium text-gray-700 mb-1">Color primario *</label>
+              <div class="flex items-center space-x-3">
+                <input type="color" id="primary_color" formControlName="primary_color" 
+                       class="h-10 w-10 border-0 rounded-md p-0">
+                <input type="text" [value]="settingsForm.get('primary_color')?.value" formControlName="primary_color"
+                       class="flex-1 border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
+              </div>
+              <div *ngIf="settingsForm.get('primary_color')?.touched && settingsForm.get('primary_color')?.invalid" class="text-red-500 text-sm mt-1">
+                Formato de color inválido. Usa formato hexadecimal (ej: #FF0000).
+              </div>
+            </div>
+            
+            <!-- Color secundario -->
+            <div>
+              <label for="secondary_color" class="block text-sm font-medium text-gray-700 mb-1">Color secundario *</label>
+              <div class="flex items-center space-x-3">
+                <input type="color" id="secondary_color" formControlName="secondary_color" 
+                       class="h-10 w-10 border-0 rounded-md p-0">
+                <input type="text" [value]="settingsForm.get('secondary_color')?.value" formControlName="secondary_color"
+                       class="flex-1 border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
+              </div>
+              <div *ngIf="settingsForm.get('secondary_color')?.touched && settingsForm.get('secondary_color')?.invalid" class="text-red-500 text-sm mt-1">
+                Formato de color inválido. Usa formato hexadecimal (ej: #00FF00).
+              </div>
+            </div>
+          </div>
+          
+          <!-- Previsualización de colores -->
+          <div class="flex mt-4 space-x-4">
+            <div class="flex-1 p-4 rounded-md text-white text-center" [style.background-color]="settingsForm.get('primary_color')?.value">
+              Color primario
+            </div>
+            <div class="flex-1 p-4 rounded-md text-white text-center" [style.background-color]="settingsForm.get('secondary_color')?.value">
+              Color secundario
+            </div>
+          </div>
+        </div>
+        
+        <!-- Sección: Información de contacto -->
+        <div class="mb-8">
+          <h2 class="text-lg font-medium text-gray-800 mb-4 pb-2 border-b border-gray-200">Información de contacto</h2>
+          
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Dirección -->
+            <div>
+              <label for="address" class="block text-sm font-medium text-gray-700 mb-1">Dirección</label>
+              <input type="text" id="address" formControlName="address" 
+                     class="w-full border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
+            </div>
+            
+            <!-- Teléfono -->
+            <div>
+              <label for="phone" class="block text-sm font-medium text-gray-700 mb-1">Teléfono</label>
+              <input type="text" id="phone" formControlName="phone" 
+                     class="w-full border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
+            </div>
+            
+            <!-- Email -->
+            <div>
+              <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+              <input type="email" id="email" formControlName="email" 
+                     class="w-full border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
+              <div *ngIf="settingsForm.get('email')?.touched && settingsForm.get('email')?.invalid" class="text-red-500 text-sm mt-1">
+                Ingresa un email válido.
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Sección: Redes sociales -->
+        <!-- Sección: Redes sociales -->
+        <div class="mb-8">
+          <h2 class="text-lg font-medium text-gray-800 mb-4 pb-2 border-b border-gray-200">Redes sociales</h2>
+          
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <!-- Facebook -->
+            <div>
+              <label for="facebook" class="block text-sm font-medium text-gray-700 mb-1">Facebook</label>
+              <div class="flex">
+                <span class="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 bg-gray-50 text-gray-500">
+                  facebook.com/
+                </span>
+                <input type="text" id="facebook" formControlName="facebook" 
+                      class="flex-1 border border-gray-300 rounded-r-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
+              </div>
+            </div>
+            
+            <!-- Instagram -->
+            <div>
+              <label for="instagram" class="block text-sm font-medium text-gray-700 mb-1">Instagram</label>
+              <div class="flex">
+                <span class="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 bg-gray-50 text-gray-500">
+                  instagram.com/
+                </span>
+                <input type="text" id="instagram" formControlName="instagram" 
+                      class="flex-1 border border-gray-300 rounded-r-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
+              </div>
+            </div>
+            
+            <!-- Twitter -->
+            <div>
+              <label for="twitter" class="block text-sm font-medium text-gray-700 mb-1">Twitter</label>
+              <div class="flex">
+                <span class="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 bg-gray-50 text-gray-500">
+                  twitter.com/
+                </span>
+                <input type="text" id="twitter" formControlName="twitter" 
+                      class="flex-1 border border-gray-300 rounded-r-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
+              </div>
+            </div>
+            
+            <!-- YouTube (Nuevo) -->
+            <div>
+              <label for="youtube" class="block text-sm font-medium text-gray-700 mb-1">YouTube</label>
+              <div class="flex">
+                <span class="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 bg-gray-50 text-gray-500">
+                  youtube.com/
+                </span>
+                <input type="text" id="youtube" formControlName="youtube" 
+                      class="flex-1 border border-gray-300 rounded-r-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
+              </div>
+            </div>
+            
+            <!-- WhatsApp (Nuevo) -->
+            <div>
+              <label for="whatsapp_number" class="block text-sm font-medium text-gray-700 mb-1">WhatsApp</label>
+              <input type="text" id="whatsapp_number" formControlName="whatsapp_number" 
+                    placeholder="+1234567890" 
+                    class="w-full border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
+              <p class="text-gray-500 text-xs mt-1">Formato internacional con "+" (ej: +1234567890)</p>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Botones del formulario -->
+        <div class="flex justify-end space-x-3 mt-8">
+          <button type="button" (click)="resetForm()" class="border border-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-50 transition-colors">
+            Cancelar
+          </button>
+          <button type="submit" [disabled]="isSubmitting" 
+                  class="bg-primary text-white px-4 py-2 rounded-md hover:bg-primary-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+            {{ isSubmitting ? 'Guardando...' : 'Guardar configuración' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>

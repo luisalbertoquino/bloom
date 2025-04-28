@@ -1,0 +1,86 @@
+<!-- src/app/features/store/product-quick-view/product-quick-view.component.html -->
+<!-- Overlay de fondo oscuro -->
+<div *ngIf="isVisible" 
+     class="fixed inset-0 bg-black bg-opacity-75 z-50 flex items-center justify-center"
+     (click)="closeModal()">
+  
+  <!-- Modal -->
+  <div *ngIf="product" 
+       class="bg-white rounded-lg shadow-xl max-w-4xl w-full mx-4 overflow-hidden max-h-[90vh] flex flex-col md:flex-row"
+       (click)="stopPropagation($event)">
+    
+    <!-- Imagen del producto (lado izquierdo) -->
+    <div class="md:w-1/2 bg-gray-100 flex items-center justify-center p-4">
+      <img [src]="getImageUrl(product.main_image)" 
+           [alt]="product.name" 
+           class="max-h-80 max-w-full object-contain">
+    </div>
+    
+    <!-- Información del producto (lado derecho) -->
+    <div class="md:w-1/2 p-6 flex flex-col overflow-y-auto">
+      <!-- Botón de cerrar -->
+      <button (click)="closeModal()" class="absolute top-4 right-4 text-gray-500 hover:text-gray-800">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+      
+      <!-- Nombre y precio -->
+      <h3 class="text-xl font-bold text-gray-800 mb-2">{{ product.name }}</h3>
+      <p class="text-2xl text-primary font-bold mb-4">${{ product.price.toFixed(2) }}</p>
+      
+      <!-- Descripción -->
+      <div class="mb-6">
+        <p class="text-gray-600 line-clamp-4">{{ product.description }}</p>
+        <button (click)="viewProductDetails()" class="text-primary hover:underline mt-1 text-sm">
+          Ver detalles completos
+        </button>
+      </div>
+      
+      <!-- Disponibilidad -->
+      <div class="mb-6">
+        <p class="text-gray-700">
+          <span class="font-medium">Disponibilidad:</span> 
+          <span *ngIf="product.stock > 0" class="text-green-600">En stock ({{ product.stock }} disponibles)</span>
+          <span *ngIf="product.stock <= 0" class="text-red-600">Agotado</span>
+        </p>
+      </div>
+      
+      <!-- Selección de cantidad -->
+      <div class="mb-6">
+        <label for="quantity-modal" class="block text-gray-700 font-medium mb-2">Cantidad</label>
+        <div class="flex">
+          <button (click)="decreaseQuantity()" class="bg-gray-200 px-4 py-2 rounded-l-md hover:bg-gray-300">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4" />
+            </svg>
+          </button>
+          <input type="number" id="quantity-modal" [(ngModel)]="quantity" min="1" max="10" 
+                class="border-t border-b px-4 py-2 w-16 text-center" readonly>
+          <button (click)="increaseQuantity()" class="bg-gray-200 px-4 py-2 rounded-r-md hover:bg-gray-300">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+            </svg>
+          </button>
+        </div>
+      </div>
+      
+      <!-- Botones de acción -->
+      <div class="flex space-x-3 mt-auto">
+        <button (click)="addToCart()" class="bg-gray-800 text-white py-2 px-4 rounded-md hover:bg-gray-700 flex-1 flex items-center justify-center">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+          </svg>
+          Agregar al carrito
+        </button>
+        
+        <button (click)="buyNow()" class="bg-primary text-white py-2 px-4 rounded-md hover:bg-primary-dark flex-1 flex items-center justify-center">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+          </svg>
+          Comprar ahora
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

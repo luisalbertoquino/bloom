@@ -148,52 +148,22 @@ export class BlogManagementComponent implements OnInit {
     }
 
     // Refrescar token CSRF antes de enviar datos
-    this.refreshCsrfAndSubmit(formData);
-  }
-
-  // Nuevo método para refrescar CSRF y enviar datos
-  refreshCsrfAndSubmit(formData: FormData): void {
-    // Si tienes el método refreshCsrfToken en AuthService, úsalo
-    if ('refreshCsrfToken' in this.authService) {
-      // @ts-ignore - Ignoramos el error porque sabemos que el método existe
-      this.authService.refreshCsrfToken().pipe(
-        switchMap(() => {
-          if (this.isEditing && this.currentPostId) {
-            return this.blogService.updatePost(this.currentPostId, formData);
-          } else {
-            return this.blogService.createPost(formData);
-          }
-        })
-      ).subscribe({
-        next: (post) => {
-          this.handleSuccess(this.isEditing ? 'Entrada actualizada correctamente.' : 'Entrada creada correctamente.');
-        },
-        error: (error) => {
-          this.handleError(error);
+    this.authService.refreshCsrfToken().pipe(
+      switchMap(() => {
+        if (this.isEditing && this.currentPostId) {
+          return this.blogService.updatePost(this.currentPostId, formData);
+        } else {
+          return this.blogService.createPost(formData);
         }
-      });
-    } else {
-      // Versión fallback si no tenemos el método de refresh
-      if (this.isEditing && this.currentPostId) {
-        this.blogService.updatePost(this.currentPostId, formData).subscribe({
-          next: (post) => {
-            this.handleSuccess('Entrada actualizada correctamente.');
-          },
-          error: (error) => {
-            this.handleError(error);
-          }
-        });
-      } else {
-        this.blogService.createPost(formData).subscribe({
-          next: (post) => {
-            this.handleSuccess('Entrada creada correctamente.');
-          },
-          error: (error) => {
-            this.handleError(error);
-          }
-        });
+      })
+    ).subscribe({
+      next: (post) => {
+        this.handleSuccess(this.isEditing ? 'Entrada actualizada correctamente.' : 'Entrada creada correctamente.');
+      },
+      error: (error) => {
+        this.handleError(error);
       }
-    }
+    });
   }
 
   toggleFeatured(post: BlogPost): void {
@@ -203,83 +173,44 @@ export class BlogManagementComponent implements OnInit {
     formData.append('featured', post.featured ? '0' : '1');
     
     // Refrescar token CSRF antes de actualizar estado
-    if ('refreshCsrfToken' in this.authService) {
-      // @ts-ignore
-      this.authService.refreshCsrfToken().pipe(
-        switchMap(() => this.blogService.updatePost(post.id, formData))
-      ).subscribe({
-        next: (updatedPost) => {
-          const index = this.blogPosts.findIndex(p => p.id === updatedPost.id);
-          if (index !== -1) {
-            this.blogPosts[index] = updatedPost;
-            this.applyFilters();
-          }
-          this.successMessage = `Estado destacado de "${post.title}" actualizado correctamente.`;
-          setTimeout(() => this.successMessage = '', 3000);
-        },
-        error: (error) => {
-          console.error('Error updating post featured status', error);
-          this.errorMessage = `Error al actualizar el estado destacado de "${post.title}".`;
-          setTimeout(() => this.errorMessage = '', 3000);
+    this.authService.refreshCsrfToken().pipe(
+      switchMap(() => this.blogService.updatePost(post.id, formData))
+    ).subscribe({
+      next: (updatedPost) => {
+        const index = this.blogPosts.findIndex(p => p.id === updatedPost.id);
+        if (index !== -1) {
+          this.blogPosts[index] = updatedPost;
+          this.applyFilters();
         }
-      });
-    } else {
-      // Versión fallback
-      this.blogService.updatePost(post.id, formData).subscribe({
-        next: (updatedPost) => {
-          const index = this.blogPosts.findIndex(p => p.id === updatedPost.id);
-          if (index !== -1) {
-            this.blogPosts[index] = updatedPost;
-            this.applyFilters();
-          }
-          this.successMessage = `Estado destacado de "${post.title}" actualizado correctamente.`;
-          setTimeout(() => this.successMessage = '', 3000);
-        },
-        error: (error) => {
-          console.error('Error updating post featured status', error);
-          this.errorMessage = `Error al actualizar el estado destacado de "${post.title}".`;
-          setTimeout(() => this.errorMessage = '', 3000);
-        }
-      });
-    }
+        this.successMessage = `Estado destacado de "${post.title}" actualizado correctamente.`;
+        setTimeout(() => this.successMessage = '', 3000);
+      },
+      error: (error) => {
+        console.error('Error updating post featured status', error);
+        this.errorMessage = `Error al actualizar el estado destacado de "${post.title}".`;
+        setTimeout(() => this.errorMessage = '', 3000);
+      }
+    });
   }
 
   deleteBlogPost(post: BlogPost): void {
     if (confirm(`¿Estás seguro de que deseas eliminar la entrada "${post.title}"?`)) {
       // Refrescar token CSRF antes de eliminar
-      if ('refreshCsrfToken' in this.authService) {
-        // @ts-ignore
-        this.authService.refreshCsrfToken().pipe(
-          switchMap(() => this.blogService.deletePost(post.id))
-        ).subscribe({
-          next: () => {
-            this.blogPosts = this.blogPosts.filter(p => p.id !== post.id);
-            this.applyFilters();
-            this.successMessage = `Entrada "${post.title}" eliminada correctamente.`;
-            setTimeout(() => this.successMessage = '', 3000);
-          },
-          error: (error) => {
-            console.error('Error deleting blog post', error);
-            this.errorMessage = `Error al eliminar la entrada "${post.title}".`;
-            setTimeout(() => this.errorMessage = '', 3000);
-          }
-        });
-      } else {
-        // Versión fallback
-        this.blogService.deletePost(post.id).subscribe({
-          next: () => {
-            this.blogPosts = this.blogPosts.filter(p => p.id !== post.id);
-            this.applyFilters();
-            this.successMessage = `Entrada "${post.title}" eliminada correctamente.`;
-            setTimeout(() => this.successMessage = '', 3000);
-          },
-          error: (error) => {
-            console.error('Error deleting blog post', error);
-            this.errorMessage = `Error al eliminar la entrada "${post.title}".`;
-            setTimeout(() => this.errorMessage = '', 3000);
-          }
-        });
-      }
+      this.authService.refreshCsrfToken().pipe(
+        switchMap(() => this.blogService.deletePost(post.id))
+      ).subscribe({
+        next: () => {
+          this.blogPosts = this.blogPosts.filter(p => p.id !== post.id);
+          this.applyFilters();
+          this.successMessage = `Entrada "${post.title}" eliminada correctamente.`;
+          setTimeout(() => this.successMessage = '', 3000);
+        },
+        error: (error) => {
+          console.error('Error deleting blog post', error);
+          this.errorMessage = `Error al eliminar la entrada "${post.title}".`;
+          setTimeout(() => this.errorMessage = '', 3000);
+        }
+      });
     }
   }
 
@@ -294,7 +225,23 @@ export class BlogManagementComponent implements OnInit {
   private handleError(error: any): void {
     this.isSubmitting = false;
     console.error('Error submitting form', error);
-    if (error.status === 419) {
+    
+    // Verificar si es un error de autenticación
+    if (error.status === 401) {
+      this.errorMessage = 'Tu sesión ha expirado. Por favor, inicia sesión nuevamente.';
+      // Redirigir al login después de 2 segundos
+      setTimeout(() => {
+        this.authService.logout().subscribe({
+          next: () => {
+            // La redirección se maneja en el servicio AuthService
+          },
+          error: () => {
+            // Forzar redirección en caso de error
+            window.location.href = '/login';
+          }
+        });
+      }, 2000);
+    } else if (error.status === 419) {
       // Error específico de CSRF token mismatch
       this.errorMessage = 'Error de seguridad. Por favor, intenta de nuevo.';
     } else if (error.error && error.error.message) {

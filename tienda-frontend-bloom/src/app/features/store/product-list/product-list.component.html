@@ -40,7 +40,7 @@
       <!-- Filtros (opcional) -->
       <div class="mb-8 flex flex-wrap items-center justify-between">
         <div class="mb-4 md:mb-0">
-          <span class="text-gray-600">{{ products.length }} productos encontrados</span>
+          <span class="text-gray-600">{{ allProducts.length }} productos encontrados (mostrando {{ products.length }} en esta página)</span>
         </div>
         
         <div class="flex items-center space-x-4">
@@ -58,32 +58,49 @@
       <!-- Grid de productos -->
       <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
         <app-product-card 
-        *ngFor="let product of products" 
-        [product]="product"
-        [storageUrl]="storageUrl"
-        (viewDetails)="viewProductDetails($event)"
-        (quickView)="quickView($event)"
-        (addToCart)="addToCart($event)"
-        (buyNow)="buyNow($event)">
-      </app-product-card>
+          *ngFor="let product of products" 
+          [product]="product"
+          [storageUrl]="storageUrl"
+          (viewDetails)="viewProductDetails($event)"
+          (quickView)="quickView($event)"
+          (addToCart)="addToCart($event)"
+          (buyNow)="buyNow($event)">
+        </app-product-card>
       </div>
       
-      <!-- Paginación (opcional) -->
-      <div class="flex justify-center mt-12">
+      <!-- Paginación -->
+      <div *ngIf="totalPages > 1" class="flex justify-center mt-12">
         <nav class="flex items-center">
-          <button class="px-3 py-1 rounded-l border border-gray-300 bg-white text-gray-600 hover:bg-gray-50">
+          <!-- Botón Anterior -->
+          <button 
+            (click)="previousPage()" 
+            [disabled]="currentPage === 1"
+            [class.opacity-50]="currentPage === 1"
+            [class.cursor-not-allowed]="currentPage === 1"
+            class="px-3 py-1 rounded-l border border-gray-300 bg-white text-gray-600 hover:bg-gray-50">
             Anterior
           </button>
-          <button class="px-3 py-1 border-t border-b border-gray-300 bg-primary text-white">
-            1
-          </button>
-          <button class="px-3 py-1 border-t border-b border-gray-300 bg-white text-gray-600 hover:bg-gray-50">
-            2
-          </button>
-          <button class="px-3 py-1 border-t border-b border-gray-300 bg-white text-gray-600 hover:bg-gray-50">
-            3
-          </button>
-          <button class="px-3 py-1 rounded-r border border-gray-300 bg-white text-gray-600 hover:bg-gray-50">
+          
+          <!-- Botones de números de página -->
+          <ng-container *ngFor="let page of getPages()">
+            <button 
+              (click)="goToPage(page)" 
+              [class.bg-primary]="page === currentPage"
+              [class.text-white]="page === currentPage"
+              [class.bg-white]="page !== currentPage"
+              [class.text-gray-600]="page !== currentPage"
+              class="px-3 py-1 border-t border-b border-gray-300 hover:bg-gray-50">
+              {{ page }}
+            </button>
+          </ng-container>
+          
+          <!-- Botón Siguiente -->
+          <button 
+            (click)="nextPage()" 
+            [disabled]="currentPage === totalPages"
+            [class.opacity-50]="currentPage === totalPages"
+            [class.cursor-not-allowed]="currentPage === totalPages"
+            class="px-3 py-1 rounded-r border border-gray-300 bg-white text-gray-600 hover:bg-gray-50">
             Siguiente
           </button>
         </nav>
@@ -96,8 +113,8 @@
 
   <!-- Componente Quick View Modal -->
   <app-product-quick-view 
-  [product]="selectedProduct" 
-  [isVisible]="showQuickView"
-  (close)="closeQuickView()">
-</app-product-quick-view>
+    [product]="selectedProduct" 
+    [isVisible]="showQuickView"
+    (close)="closeQuickView()">
+  </app-product-quick-view>
 </div>

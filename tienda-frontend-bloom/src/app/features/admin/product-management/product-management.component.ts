@@ -4,7 +4,9 @@ import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ProductService, Product } from '../../../core/services/product.service';
 import { CategoryService, Category } from '../../../core/services/category.service';
+import { AuthService } from '../../../core/services/auth.service';
 import { environment } from '../../../../enviroments/enviroment';
+import { switchMap } from 'rxjs/operators';
 
 @Component({
   selector: 'app-product-management',
@@ -37,7 +39,8 @@ export class ProductManagementComponent implements OnInit {
   constructor(
     private productService: ProductService,
     private categoryService: CategoryService,
-    private fb: FormBuilder
+    private fb: FormBuilder,
+    private authService: AuthService
   ) { }
 
   ngOnInit(): void {
@@ -186,31 +189,32 @@ export class ProductManagementComponent implements OnInit {
       formData.append('main_image', this.selectedFile);
     }
 
-    if (this.isEditing && this.currentProductId) {
-      // Actualizar producto existente
-      this.productService.updateProduct(this.currentProductId, formData).subscribe({
-        next: (product) => {
-          this.handleSuccess('Producto actualizado correctamente.');
-        },
-        error: (error) => {
-          this.handleError(error);
+    // Refrescar token CSRF antes de enviar datos
+    this.authService.refreshCsrfToken().pipe(
+      switchMap(() => {
+        if (this.isEditing && this.currentProductId) {
+          // Actualizar producto existente
+          return this.productService.updateProduct(this.currentProductId, formData);
+        } else {
+          // Crear nuevo producto
+          return this.productService.createProduct(formData);
         }
-      });
-    } else {
-      // Crear nuevo producto
-      this.productService.createProduct(formData).subscribe({
-        next: (product) => {
-          this.handleSuccess('Producto creado correctamente.');
-        },
-        error: (error) => {
-          this.handleError(error);
-        }
-      });
-    }
+      })
+    ).subscribe({
+      next: (product) => {
+        this.handleSuccess(this.isEditing ? 'Producto actualizado correctamente.' : 'Producto creado correctamente.');
+      },
+      error: (error) => {
+        this.handleError(error);
+      }
+    });
   }
 
   toggleProductAvailability(product: Product): void {
-    this.productService.toggleAvailability(product.id).subscribe({
+    // Refrescar token CSRF antes de actualizar disponibilidad
+    this.authService.refreshCsrfToken().pipe(
+      switchMap(() => this.productService.toggleAvailability(product.id))
+    ).subscribe({
       next: () => {
         // Actualizar estado del producto localmente
         product.available = !product.available;
@@ -227,7 +231,10 @@ export class ProductManagementComponent implements OnInit {
 
   deleteProduct(product: Product): void {
     if (confirm(`¿Estás seguro de que deseas eliminar el producto "${product.name}"?`)) {
-      this.productService.deleteProduct(product.id).subscribe({
+      // Refrescar token CSRF antes de eliminar
+      this.authService.refreshCsrfToken().pipe(
+        switchMap(() => this.productService.deleteProduct(product.id))
+      ).subscribe({
         next: () => {
           this.products = this.products.filter(p => p.id !== product.id);
           this.applyFilters();
@@ -259,7 +266,26 @@ export class ProductManagementComponent implements OnInit {
   private handleError(error: any): void {
     this.isSubmitting = false;
     console.error('Error submitting form', error);
-    if (error.error && error.error.message) {
+    
+    // Verificar si es un error de autenticación
+    if (error.status === 401) {
+      this.errorMessage = 'Tu sesión ha expirado. Por favor, inicia sesión nuevamente.';
+      // Redirigir al login después de 2 segundos
+      setTimeout(() => {
+        this.authService.logout().subscribe({
+          next: () => {
+            // La redirección se maneja en el servicio AuthService
+          },
+          error: () => {
+            // Forzar redirección en caso de error
+            window.location.href = '/login';
+          }
+        });
+      }, 2000);
+    } else if (error.status === 419) {
+      // Error específico de CSRF token mismatch
+      this.errorMessage = 'Error de seguridad. Por favor, intenta de nuevo.';
+    } else if (error.error && error.error.message) {
       this.errorMessage = error.error.message;
     } else if (error.error && error.error.errors) {
       this.errorMessage = Object.values(error.error.errors)[0] as string;

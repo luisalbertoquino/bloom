@@ -3,6 +3,7 @@ import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { HttpBaseService } from './http-base.service';
 import { environment } from '../../../enviroments/enviroment';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 
 export interface Product {
   id: number;
@@ -24,7 +25,10 @@ export interface Product {
 export class ProductService {
   private apiUrl = environment.apiUrl;
 
-  constructor(private httpBase: HttpBaseService) { }
+  constructor(
+    private httpBase: HttpBaseService,
+    private http: HttpClient
+  ) { }
 
   // Obtener todos los productos
   getProducts(): Observable<Product[]> {
@@ -38,19 +42,64 @@ export class ProductService {
 
   // Solo para administradores
   createProduct(productData: FormData): Observable<Product> {
-    return this.httpBase.post<Product>(`${this.apiUrl}/products`, productData);
+    const headers = new HttpHeaders({
+      'X-XSRF-TOKEN': decodeURIComponent(this.getTokenFromCookie('XSRF-TOKEN') || ''),
+      'X-Requested-With': 'XMLHttpRequest'
+    });
+    
+    return this.http.post<Product>(`${this.apiUrl}/products`, productData, {
+      headers: headers,
+      withCredentials: true
+    });
   }
 
   updateProduct(id: number, productData: FormData): Observable<Product> {
-    return this.httpBase.put<Product>(`${this.apiUrl}/products/${id}`, productData);
+    // Simulando PUT con POST para mejor compatibilidad con FormData en Laravel
+    productData.append('_method', 'PUT');
+    
+    const headers = new HttpHeaders({
+      'X-XSRF-TOKEN': decodeURIComponent(this.getTokenFromCookie('XSRF-TOKEN') || ''),
+      'X-Requested-With': 'XMLHttpRequest'
+    });
+    
+    return this.http.post<Product>(`${this.apiUrl}/products/${id}`, productData, {
+      headers: headers,
+      withCredentials: true
+    });
   }
 
   deleteProduct(id: number): Observable<any> {
-    return this.httpBase.delete<any>(`${this.apiUrl}/products/${id}`);
+    const headers = new HttpHeaders({
+      'X-XSRF-TOKEN': decodeURIComponent(this.getTokenFromCookie('XSRF-TOKEN') || ''),
+      'X-Requested-With': 'XMLHttpRequest'
+    });
+    
+    return this.http.delete<any>(`${this.apiUrl}/products/${id}`, {
+      headers: headers,
+      withCredentials: true
+    });
   }
 
   toggleAvailability(id: number): Observable<any> {
-    // Nota: Necesitamos añadir método patch a HttpBaseService o usar post como alternativa
-    return this.httpBase.post<any>(`${this.apiUrl}/products/${id}/toggle-availability`, {});
+    const headers = new HttpHeaders({
+      'X-XSRF-TOKEN': decodeURIComponent(this.getTokenFromCookie('XSRF-TOKEN') || ''),
+      'X-Requested-With': 'XMLHttpRequest'
+    });
+    
+    return this.http.patch<any>(`${this.apiUrl}/products/${id}/toggle-availability`, {}, {
+      headers: headers,
+      withCredentials: true
+    });
+  }
+
+  private getTokenFromCookie(name: string): string | null {
+    const cookies = document.cookie.split(';');
+    for (const cookie of cookies) {
+      const [cookieName, cookieValue] = cookie.trim().split('=');
+      if (cookieName === name) {
+        return cookieValue;
+      }
+    }
+    return null;
   }
 }

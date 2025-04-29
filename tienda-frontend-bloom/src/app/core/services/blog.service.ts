@@ -3,6 +3,7 @@ import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { HttpBaseService } from './http-base.service';
 import { environment } from '../../../enviroments/enviroment';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 
 export interface BlogPost {
   id: number;
@@ -21,7 +22,10 @@ export interface BlogPost {
 export class BlogService {
   private apiUrl = environment.apiUrl;
 
-  constructor(private httpBase: HttpBaseService) { }
+  constructor(
+    private httpBase: HttpBaseService,
+    private http: HttpClient
+  ) { }
 
   // Obtener todos los posts
   getPosts(): Observable<BlogPost[]> {
@@ -40,14 +44,52 @@ export class BlogService {
 
   // Solo para administradores
   createPost(postData: FormData): Observable<BlogPost> {
-    return this.httpBase.post<BlogPost>(`${this.apiUrl}/blog-posts`, postData);
+    const headers = new HttpHeaders({
+      'X-XSRF-TOKEN': decodeURIComponent(this.getTokenFromCookie('XSRF-TOKEN') || ''),
+      'X-Requested-With': 'XMLHttpRequest'
+    });
+    
+    return this.http.post<BlogPost>(`${this.apiUrl}/blog-posts`, postData, {
+      headers: headers,
+      withCredentials: true
+    });
   }
 
   updatePost(id: number, postData: FormData): Observable<BlogPost> {
-    return this.httpBase.put<BlogPost>(`${this.apiUrl}/blog-posts/${id}`, postData);
+    // Simulando PUT con POST para mejor compatibilidad con FormData en Laravel
+    postData.append('_method', 'PUT');
+    
+    const headers = new HttpHeaders({
+      'X-XSRF-TOKEN': decodeURIComponent(this.getTokenFromCookie('XSRF-TOKEN') || ''),
+      'X-Requested-With': 'XMLHttpRequest'
+    });
+    
+    return this.http.post<BlogPost>(`${this.apiUrl}/blog-posts/${id}`, postData, {
+      headers: headers,
+      withCredentials: true
+    });
   }
 
   deletePost(id: number): Observable<any> {
-    return this.httpBase.delete<any>(`${this.apiUrl}/blog-posts/${id}`);
+    const headers = new HttpHeaders({
+      'X-XSRF-TOKEN': decodeURIComponent(this.getTokenFromCookie('XSRF-TOKEN') || ''),
+      'X-Requested-With': 'XMLHttpRequest'
+    });
+    
+    return this.http.delete<any>(`${this.apiUrl}/blog-posts/${id}`, {
+      headers: headers,
+      withCredentials: true
+    });
+  }
+
+  private getTokenFromCookie(name: string): string | null {
+    const cookies = document.cookie.split(';');
+    for (const cookie of cookies) {
+      const [cookieName, cookieValue] = cookie.trim().split('=');
+      if (cookieName === name) {
+        return cookieValue;
+      }
+    }
+    return null;
   }
 }

@@ -1,11 +1,13 @@
 // src/app/core/services/settings.service.ts
 import { Injectable, Inject, PLATFORM_ID } from '@angular/core';
 import { Observable, of } from 'rxjs';
-import { tap, catchError, retry } from 'rxjs/operators';
+import { tap, catchError, retry, switchMap } from 'rxjs/operators';
 import { HttpBaseService } from './http-base.service';
 import { CacheService } from './cache.service';
 import { environment } from '../../../enviroments/enviroment';
 import { isPlatformBrowser } from '@angular/common';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { AuthService } from './auth.service';
 
 @Injectable({
   providedIn: 'root'
@@ -23,7 +25,9 @@ export class SettingsService {
 
   constructor(
     private httpBase: HttpBaseService,
+    private http: HttpClient,
     private cacheService: CacheService,
+    private authService: AuthService,
     @Inject(PLATFORM_ID) private platformId: Object
   ) {
     this.isBrowser = isPlatformBrowser(this.platformId);
@@ -74,11 +78,24 @@ export class SettingsService {
 
   // Solo para administradores (actualiza configuración y limpia caché)
   updateSettings(settingsData: FormData): Observable<any> {
-    return this.httpBase.post<any>(`${this.apiUrl}/settings`, settingsData).pipe(
-      retry(1),
-      tap(() => {
-        // Limpiar caché después de actualizar
-        this.cacheService.clear('settings');
+    return this.authService.refreshCsrfToken().pipe(
+      switchMap(() => {
+        const token = this.getTokenFromCookie('XSRF-TOKEN');
+        
+        const headers = new HttpHeaders({
+          'X-XSRF-TOKEN': decodeURIComponent(token || ''),
+          'X-Requested-With': 'XMLHttpRequest'
+        });
+        
+        return this.http.post<any>(`${this.apiUrl}/settings`, settingsData, {
+          headers: headers,
+          withCredentials: true
+        }).pipe(
+          tap(() => {
+            // Limpiar caché después de actualizar
+            this.cacheService.clear('settings');
+          })
+        );
       }),
       catchError(error => {
         console.error('Error al actualizar configuraciones:', error);
@@ -101,5 +118,18 @@ export class SettingsService {
     } catch (error) {
       console.error('Error al configurar el favicon:', error);
     }
+  }
+
+  private getTokenFromCookie(name: string): string | null {
+    if (!this.isBrowser) return null;
+    
+    const cookies = document.cookie.split(';');
+    for (const cookie of cookies) {
+      const [cookieName, cookieValue] = cookie.trim().split('=');
+      if (cookieName === name) {
+        return cookieValue;
+      }
+    }
+    return null;
   }
 }

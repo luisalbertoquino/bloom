@@ -4,8 +4,11 @@
   <aside [class]="isSidebarOpen ? 'w-64' : 'w-20'" class="bg-gray-800 text-white transition-all duration-300 ease-in-out">
     <div class="p-4 flex justify-between items-center">
       <div class="flex items-center space-x-2" *ngIf="isSidebarOpen">
-        <img [src]="logoUrl" [alt]="siteTitle" class="h-8 w-auto">
-        <span class="text-xl font-bold">{{ siteTitle }}</span>
+        <!-- Logo con enlace al home -->
+        <a [routerLink]="['/']" class="flex items-center space-x-2 hover:opacity-80 transition-opacity">
+          <img [src]="logoUrl" [alt]="siteTitle" class="h-8 w-auto">
+          <span class="text-xl font-bold">{{ siteTitle }}</span>
+        </a>
       </div>
       <button (click)="toggleSidebar()" class="p-1 rounded-full hover:bg-gray-700">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">

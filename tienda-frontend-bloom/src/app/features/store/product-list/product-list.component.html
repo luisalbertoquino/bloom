@@ -37,26 +37,84 @@
 
     <!-- Lista de productos -->
     <section class="container mx-auto my-8 px-4">
-      <!-- Filtros (opcional) -->
-      <div class="mb-8 flex flex-wrap items-center justify-between">
-        <div class="mb-4 md:mb-0">
-          <span class="text-gray-600">{{ allProducts.length }} productos encontrados (mostrando {{ products.length }} en esta página)</span>
+      <!-- Barra de búsqueda y filtros -->
+      <div class="mb-8 flex flex-wrap gap-4 items-center justify-between">
+        <!-- Barra de búsqueda mejorada -->
+        <div class="w-full md:w-auto flex items-center">
+          <div class="relative flex-grow md:w-80">
+            <input 
+              type="text" 
+              [(ngModel)]="searchTerm" 
+              (keyup.enter)="onSearch()"
+              placeholder="Buscar productos..." 
+              class="w-full py-2 px-4 pr-10 bg-white text-gray-700 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+            >
+            <div class="absolute inset-y-0 right-0 flex items-center pr-3">
+              <!-- Icono de limpieza (solo visible cuando hay texto) -->
+              <button *ngIf="searchTerm" (click)="clearSearch()" class="text-gray-400 hover:text-gray-600" title="Limpiar búsqueda">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                </svg>
+              </button>
+              <!-- Icono de búsqueda (cuando no hay texto o se está mostrando el icono de limpieza) -->
+              <button *ngIf="!searchTerm" (click)="onSearch()" class="text-gray-400 hover:text-gray-600" title="Buscar">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />
+                </svg>
+              </button>
+            </div>
+          </div>
+          <!-- Botón de búsqueda explícito (en móviles puede ser útil) -->
+          <button 
+            (click)="onSearch()" 
+            class="ml-2 py-2 px-4 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors shadow-sm">
+            Buscar
+          </button>
         </div>
         
-        <div class="flex items-center space-x-4">
-          <label for="sort" class="text-gray-600">Ordenar por:</label>
-          <select id="sort" class="border border-gray-300 rounded px-3 py-1 focus:outline-none focus:ring-1 focus:ring-primary">
-            <option value="newest">Más recientes</option>
-            <option value="price-asc">Precio: menor a mayor</option>
-            <option value="price-desc">Precio: mayor a menor</option>
-            <option value="name-asc">Nombre: A-Z</option>
-            <option value="name-desc">Nombre: Z-A</option>
-          </select>
+        <!-- Información de resultados y ordenación -->
+        <div class="w-full md:w-auto flex flex-wrap justify-between items-center gap-4">
+          <!-- Información de resultados -->
+          <div>
+            <span class="text-gray-600">
+              {{ filteredProducts.length }} productos encontrados
+              <span *ngIf="searchTerm"> para "{{ searchTerm }}"</span>
+              <span *ngIf="filteredProducts.length !== products.length"> (mostrando {{ products.length }} en esta página)</span>
+            </span>
+          </div>
+          
+          <!-- Selector de ordenación -->
+          <div class="flex items-center space-x-2">
+            <label for="sort" class="text-gray-600">Ordenar por:</label>
+            <select id="sort" class="border border-gray-300 rounded-md px-3 py-1 bg-white focus:outline-none focus:ring-1 focus:ring-primary">
+              <option value="newest">Más recientes</option>
+              <option value="price-asc">Precio: menor a mayor</option>
+              <option value="price-desc">Precio: mayor a menor</option>
+              <option value="name-asc">Nombre: A-Z</option>
+              <option value="name-desc">Nombre: Z-A</option>
+            </select>
+          </div>
         </div>
       </div>
       
+      <!-- Mensaje de no resultados -->
+      <div *ngIf="filteredProducts.length === 0" class="text-center py-12">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto text-gray-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        <h3 class="text-lg font-medium text-gray-900 mb-2">No se encontraron productos</h3>
+        <p class="text-gray-500 mb-4">No hay productos que coincidan con tu búsqueda "{{ searchTerm }}"</p>
+        <button (click)="clearSearch()" class="inline-flex items-center px-4 py-2 bg-primary text-white rounded-md hover:bg-primary-dark transition-colors">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1z" clip-rule="evenodd" />
+            <path fill-rule="evenodd" d="M3.904 15.555a1 1 0 01.144-1.408l4.099-3.347a1 1 0 111.271 1.545l-4.098 3.346a1 1 0 01-1.416-.136z" clip-rule="evenodd" />
+          </svg>
+          Limpiar búsqueda
+        </button>
+      </div>
+      
       <!-- Grid de productos -->
-      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+      <div *ngIf="filteredProducts.length > 0" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
         <app-product-card 
           *ngFor="let product of products" 
           [product]="product"
@@ -68,7 +126,7 @@
         </app-product-card>
       </div>
       
-      <!-- Paginación -->
+      <!-- Paginación (solo si hay más de una página) -->
       <div *ngIf="totalPages > 1" class="flex justify-center mt-12">
         <nav class="flex items-center">
           <!-- Botón Anterior -->

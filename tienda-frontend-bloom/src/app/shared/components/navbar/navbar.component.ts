@@ -1,6 +1,6 @@
 // src/app/shared/components/navbar/navbar.component.ts
-import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, OnInit, ViewChild, ElementRef, AfterViewInit, OnDestroy, Inject, PLATFORM_ID } from '@angular/core';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { CartService } from '../../../core/services/cart.service';
@@ -20,7 +20,9 @@ import { CartPopupComponent } from '../../../features/store/cart-popup/cart-popu
     CartPopupComponent
   ],
 })
-export class NavbarComponent implements OnInit {
+export class NavbarComponent implements OnInit, AfterViewInit, OnDestroy {
+  @ViewChild('searchInput') searchInput!: ElementRef;
+  
   isMobileMenuOpen = false;
   isSearchOpen = false;
   isUserMenuOpen = false;
@@ -31,13 +33,20 @@ export class NavbarComponent implements OnInit {
   isAuthenticated = false;
   userName = '';
   searchQuery = '';
+  
+  private isBrowser: boolean;
+  private clickListener: any = null;
 
   constructor(
     private cartService: CartService,
     private settingsService: SettingsService,
     private authService: AuthService,
-    private router: Router
-  ) { }
+    private router: Router,
+    @Inject(PLATFORM_ID) private platformId: Object
+  ) {
+    // Verificar si estamos en el navegador
+    this.isBrowser = isPlatformBrowser(this.platformId);
+  }
 
   ngOnInit(): void {
     // Suscribirse a los cambios en el carrito
@@ -57,6 +66,29 @@ export class NavbarComponent implements OnInit {
     this.loadSettings();
   }
 
+  ngAfterViewInit(): void {
+    // Solo ejecutar en el navegador
+    if (this.isBrowser) {
+      // Escuchar eventos globales para cerrar componentes abiertos
+      this.clickListener = (event: MouseEvent) => {
+        // Cerrar el menú de usuario si se hace clic fuera de él
+        const userMenuElement = document.querySelector('.relative') as Node;
+        if (this.isUserMenuOpen && userMenuElement && !event.composedPath().includes(userMenuElement)) {
+          this.isUserMenuOpen = false;
+        }
+      };
+      
+      document.addEventListener('click', this.clickListener);
+    }
+  }
+  
+  ngOnDestroy(): void {
+    // Limpiar el listener cuando el componente se destruye
+    if (this.isBrowser && this.clickListener) {
+      document.removeEventListener('click', this.clickListener);
+    }
+  }
+
   toggleMobileMenu(): void {
     this.isMobileMenuOpen = !this.isMobileMenuOpen;
     if (this.isMobileMenuOpen) {
@@ -70,6 +102,15 @@ export class NavbarComponent implements OnInit {
     if (this.isSearchOpen) {
       this.isMobileMenuOpen = false;
       this.isUserMenuOpen = false;
+      
+      // Enfocar el input de búsqueda después de que se muestre (solo en navegador)
+      if (this.isBrowser) {
+        setTimeout(() => {
+          if (this.searchInput && this.searchInput.nativeElement) {
+            this.searchInput.nativeElement.focus();
+          }
+        }, 100);
+      }
     }
   }
 
@@ -97,7 +138,7 @@ export class NavbarComponent implements OnInit {
     if (this.searchQuery.trim()) {
       // Navegar a la página de productos con el parámetro de búsqueda
       this.router.navigate(['/productos'], { 
-        queryParams: { query: this.searchQuery } 
+        queryParams: { search: this.searchQuery.trim() } 
       });
       this.isSearchOpen = false;
       this.searchQuery = '';

@@ -2,6 +2,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
+import { FormsModule } from '@angular/forms';
 import { NavbarComponent } from '../../../shared/components/navbar/navbar.component';
 import { FooterComponent } from '../../../shared/components/footer/footer.component';
 import { ProductCardComponent } from '../../../shared/components/product-card/product-card.component';
@@ -20,6 +21,7 @@ import { Router, ActivatedRoute } from '@angular/router';
   imports: [
     CommonModule,
     RouterModule,
+    FormsModule,
     NavbarComponent,
     FooterComponent,
     ProductQuickViewComponent,
@@ -27,16 +29,21 @@ import { Router, ActivatedRoute } from '@angular/router';
   ]
 }) 
 export class ProductListComponent implements OnInit {
-  // Todos los productos
+  // Todos los productos (sin filtrar)
   allProducts: Product[] = [];
+  // Productos filtrados por búsqueda
+  filteredProducts: Product[] = [];
   // Productos de la página actual
   products: Product[] = [];
   isLoading = true;
   storageUrl = environment.storageUrl;
 
+  // Términos de búsqueda
+  searchTerm = '';
+
   // Configuración de paginación
   currentPage = 1;
-  pageSize = 10; // Productos por página
+  pageSize = 12; // Productos por página
   totalPages = 1;
 
   // Quick View Modal
@@ -55,6 +62,12 @@ export class ProductListComponent implements OnInit {
     this.route.queryParams.subscribe(params => {
       // Obtener la página de los parámetros o usar 1 por defecto
       this.currentPage = parseInt(params['page'] || '1', 10);
+      // Obtener el término de búsqueda si existe
+      const searchParam = params['search'] || '';
+      if (searchParam !== this.searchTerm) {
+        this.searchTerm = searchParam;
+      }
+      
       // Cargar los productos
       this.loadProducts();
     });
@@ -65,7 +78,7 @@ export class ProductListComponent implements OnInit {
     this.productService.getProducts().subscribe({
       next: (products: Product[]) => {
         if (products && Array.isArray(products)) {
-          // Guardar todos los productos filtrados
+          // Guardar todos los productos disponibles
           this.allProducts = products
             .filter(product => product.available)
             .map(product => ({
@@ -73,15 +86,8 @@ export class ProductListComponent implements OnInit {
               price: Number(product.price) // Convertir a número
             }));
           
-          // Calcular total de páginas
-          this.totalPages = Math.ceil(this.allProducts.length / this.pageSize);
-          
-          // Asegurar que la página actual es válida
-          if (this.currentPage < 1) this.currentPage = 1;
-          if (this.currentPage > this.totalPages) this.currentPage = this.totalPages;
-          
-          // Paginar los productos
-          this.paginateProducts();
+          // Aplicar filtro de búsqueda si hay un término
+          this.applySearchFilter();
         }
         this.isLoading = false;
       },
@@ -92,11 +98,63 @@ export class ProductListComponent implements OnInit {
     });
   }
 
+  // Aplicar filtro de búsqueda a los productos
+  applySearchFilter(): void {
+    if (this.searchTerm.trim()) {
+      const term = this.searchTerm.toLowerCase().trim();
+      this.filteredProducts = this.allProducts.filter(product => 
+        product.name.toLowerCase().includes(term) || 
+        (product.description && product.description.toLowerCase().includes(term))
+      );
+    } else {
+      this.filteredProducts = [...this.allProducts];
+    }
+    
+    // Recalcular la paginación después de filtrar
+    this.totalPages = Math.ceil(this.filteredProducts.length / this.pageSize);
+    
+    // Asegurar que la página actual es válida después del filtrado
+    if (this.currentPage < 1) this.currentPage = 1;
+    if (this.totalPages === 0) this.totalPages = 1;
+    if (this.currentPage > this.totalPages) this.currentPage = this.totalPages;
+    
+    // Paginar los productos filtrados
+    this.paginateProducts();
+  }
+
+  // Método para iniciar una búsqueda
+  onSearch(): void {
+    // Actualizar la URL con el nuevo término de búsqueda y volver a la página 1
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { 
+        search: this.searchTerm,
+        page: 1 // Resetear a la primera página en nueva búsqueda
+      },
+      queryParamsHandling: 'merge' // Mantener otros parámetros
+    });
+  }
+
+  // Método para limpiar la búsqueda
+  clearSearch(): void {
+    if (this.searchTerm) {
+      this.searchTerm = '';
+      this.router.navigate([], {
+        relativeTo: this.route,
+        queryParams: { 
+          search: null, // Eliminar parámetro search
+          page: 1 // Volver a la primera página
+        },
+        queryParamsHandling: 'merge'
+      });
+    }
+  }
+
   // Método para paginar los productos
   paginateProducts(): void {
     const startIndex = (this.currentPage - 1) * this.pageSize;
     const endIndex = startIndex + this.pageSize;
-    this.products = this.allProducts.slice(startIndex, endIndex);
+    this.products = this.filteredProducts.slice(startIndex, endIndex);
   }
 
   // Navegar a una página específica

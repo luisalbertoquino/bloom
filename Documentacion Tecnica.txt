@@ -1,0 +1,414 @@
+# Documentación Técnica - Bloom Accesorios
+
+## 1. Arquitectura del sistema
+
+### 1.1 Visión general
+
+El proyecto Bloom Accesorios está construido con una arquitectura cliente-servidor, utilizando Angular para el frontend y Laravel para el backend. La comunicación entre ambos se realiza mediante una API RESTful.
+
+```
+┌─────────────────┐       ┌─────────────────┐       ┌─────────────────┐
+│                 │       │                 │       │                 │
+│  Cliente        │       │  API Laravel    │       │  Base de datos  │
+│  Angular        │◄─────►│  (Backend)      │◄─────►│  MySQL          │
+│                 │       │                 │       │                 │
+└─────────────────┘       └─────────────────┘       └─────────────────┘
+```
+
+### 1.2 Frontend (Angular)
+
+- **Versión**: Angular 17
+- **Patrón de arquitectura**: Standalone Components
+- **Gestión de estado**: Servicios y observables RxJS
+- **Routing**: Angular Router con lazy loading
+- **Estilos**: Tailwind CSS
+- **Responsive**: Mobile-first design
+
+### 1.3 Backend (Laravel)
+
+- **Versión**: Laravel 10
+- **Arquitectura API**: RESTful con JSON
+- **Autenticación**: Laravel Sanctum (tokens)
+- **Base de datos**: MySQL con Eloquent ORM
+- **Almacenamiento**: Sistema de archivos de Laravel (storage)
+
+## 2. Estructura de datos
+
+### 2.1 Modelos principales
+
+#### Usuario (User)
+```php
+Schema::create('users', function (Blueprint $table) {
+    $table->id();
+    $table->string('name');
+    $table->string('email')->unique();
+    $table->timestamp('email_verified_at')->nullable();
+    $table->string('password');
+    $table->rememberToken();
+    $table->timestamps();
+});
+```
+
+#### Categoría (Category)
+```php
+Schema::create('categories', function (Blueprint $table) {
+    $table->id();
+    $table->string('name');
+    $table->string('slug')->unique();
+    $table->string('image')->nullable();
+    $table->boolean('active')->default(true);
+    $table->timestamps();
+});
+```
+
+#### Producto (Product)
+```php
+Schema::create('products', function (Blueprint $table) {
+    $table->id();
+    $table->foreignId('category_id')->constrained();
+    $table->string('name');
+    $table->string('slug')->unique();
+    $table->text('description')->nullable();
+    $table->decimal('price', 10, 2);
+    $table->string('main_image')->nullable();
+    $table->boolean('available')->default(true);
+    $table->integer('stock')->default(0);
+    $table->timestamps();
+});
+```
+
+#### Entrada de Blog (BlogPost)
+```php
+Schema::create('blog_posts', function (Blueprint $table) {
+    $table->id();
+    $table->string('title');
+    $table->string('slug')->unique();
+    $table->text('content');
+    $table->string('banner_image')->nullable();
+    $table->boolean('featured')->default(false);
+    $table->timestamps();
+});
+```
+
+#### Configuración (Setting)
+```php
+Schema::create('settings', function (Blueprint $table) {
+    $table->id();
+    $table->string('key')->unique();
+    $table->text('value')->nullable();
+    $table->timestamps();
+});
+```
+
+### 2.2 Relaciones
+
+- **Productos ↔ Categorías**: Un producto pertenece a una categoría. Una categoría tiene muchos productos.
+- **Imágenes ↔ Productos**: Un producto puede tener múltiples imágenes.
+
+## 3. API Endpoints
+
+### 3.1 Autenticación
+
+| Método | Endpoint | Descripción |
+|--------|----------|-------------|
+| POST   | `/api/login` | Iniciar sesión y obtener token |
+| POST   | `/api/logout` | Cerrar sesión (requiere autenticación) |
+| GET    | `/api/user` | Obtener usuario autenticado |
+
+### 3.2 Categorías
+
+| Método | Endpoint | Descripción |
+|--------|----------|-------------|
+| GET    | `/api/categories` | Obtener todas las categorías |
+| GET    | `/api/categories/{id}` | Obtener una categoría específica |
+| POST   | `/api/categories` | Crear nueva categoría (admin) |
+| PUT    | `/api/categories/{id}` | Actualizar categoría (admin) |
+| DELETE | `/api/categories/{id}` | Eliminar categoría (admin) |
+
+### 3.3 Productos
+
+| Método | Endpoint | Descripción |
+|--------|----------|-------------|
+| GET    | `/api/products` | Obtener todos los productos |
+| GET    | `/api/products/{id}` | Obtener un producto específico |
+| POST   | `/api/products` | Crear nuevo producto (admin) |
+| PUT    | `/api/products/{id}` | Actualizar producto (admin) |
+| DELETE | `/api/products/{id}` | Eliminar producto (admin) |
+| PATCH  | `/api/products/{id}/toggle-availability` | Cambiar disponibilidad (admin) |
+
+### 3.4 Blog
+
+| Método | Endpoint | Descripción |
+|--------|----------|-------------|
+| GET    | `/api/blog-posts` | Obtener todas las entradas |
+| GET    | `/api/blog-posts/featured` | Obtener entradas destacadas |
+| GET    | `/api/blog-posts/{id}` | Obtener una entrada específica |
+| POST   | `/api/blog-posts` | Crear nueva entrada (admin) |
+| PUT    | `/api/blog-posts/{id}` | Actualizar entrada (admin) |
+| DELETE | `/api/blog-posts/{id}` | Eliminar entrada (admin) |
+
+### 3.5 Configuraciones
+
+| Método | Endpoint | Descripción |
+|--------|----------|-------------|
+| GET    | `/api/settings` | Obtener todas las configuraciones |
+| GET    | `/api/settings/{key}` | Obtener una configuración específica |
+| POST   | `/api/settings` | Actualizar configuraciones (admin) |
+
+## 4. Componentes Angular clave
+
+### 4.1 Servicios Core
+
+| Servicio | Descripción |
+|----------|-------------|
+| `ApiService` | Servicio base para comunicación HTTP |
+| `AuthService` | Gestión de autenticación y tokens |
+| `CartService` | Manejo del carrito de compras |
+| `ProductService` | Operaciones relacionadas con productos |
+| `CategoryService` | Operaciones relacionadas con categorías |
+| `BlogService` | Operaciones relacionadas con el blog |
+| `SettingsService` | Gestión de configuraciones del sitio |
+| `ThemeService` | Aplicación de temas y colores personalizados |
+
+### 4.2 Componentes principales
+
+| Componente | Descripción |
+|------------|-------------|
+| `NavbarComponent` | Barra de navegación principal |
+| `FooterComponent` | Pie de página |
+| `HomeComponent` | Página de inicio con destacados |
+| `ProductListComponent` | Listado de productos con filtros |
+| `ProductDetailComponent` | Página detallada de producto |
+| `ProductQuickViewComponent` | Modal de vista rápida de producto |
+| `ProductCategoryComponent` | Productos filtrados por categoría |
+| `CartPopupComponent` | Popup del carrito de compras |
+| `BlogListComponent` | Listado de entradas del blog |
+| `BlogDetailComponent` | Página detallada de entrada |
+| `AdminLayoutComponent` | Layout para el panel administrativo |
+| `DashboardComponent` | Panel principal de administración |
+| `CategoryManagementComponent` | CRUD de categorías |
+| `ProductManagementComponent` | CRUD de productos |
+| `BlogManagementComponent` | CRUD de entradas del blog |
+| `SettingsComponent` | Configuraciones del sitio |
+
+## 5. Autenticación y seguridad
+
+### 5.1 Flujo de autenticación
+
+1. El usuario introduce credenciales en el formulario de login
+2. Angular envía una petición POST a `/api/login`
+3. Laravel valida las credenciales y genera un token con Sanctum
+4. El token se almacena en localStorage del navegador
+5. Las peticiones posteriores incluyen el token en el header Authorization
+6. Las rutas protegidas verifican el token en cada petición
+
+### 5.2 Interceptor HTTP
+
+Se utiliza un interceptor HTTP en Angular para:
+- Añadir el token de autenticación a cada petición
+- Manejar errores 401 (no autorizado)
+- Redireccionar al login cuando el token expira
+
+```typescript
+// auth.interceptor.ts
+intercept(request: HttpRequest<unknown>, next: HttpHandler): Observable<HttpEvent<unknown>> {
+  const token = localStorage.getItem('access_token');
+  
+  if (token) {
+    request = request.clone({
+      setHeaders: {
+        Authorization: `Bearer ${token}`
+      }
+    });
+  }
+  
+  return next.handle(request).pipe(
+    catchError((error: HttpErrorResponse) => {
+      if (error.status === 401) {
+        localStorage.removeItem('access_token');
+        localStorage.removeItem('user');
+        this.router.navigate(['/login']);
+      }
+      return throwError(() => error);
+    })
+  );
+}
+```
+
+### 5.3 Guards de rutas
+
+Se utilizan guards en Angular para proteger rutas administrativas:
+
+```typescript
+// auth.guard.ts
+canActivate(): boolean {
+  if (this.authService.isAuthenticated) {
+    return true;
+  }
+  
+  this.router.navigate(['/login']);
+  return false;
+}
+```
+
+## 6. Carrito de compras
+
+### 6.1 Estructura del carrito
+
+El carrito se implementa utilizando BehaviorSubject en el CartService:
+
+```typescript
+// cart.service.ts
+export class CartService {
+  private cartItems = new BehaviorSubject<Product[]>([]);
+  public cart = this.cartItems.asObservable();
+  
+  // Métodos para manipular el carrito...
+}
+```
+
+### 6.2 Persistencia
+
+Los items del carrito se almacenan en localStorage para preservarse entre sesiones:
+
+```typescript
+private saveCart(): void {
+  localStorage.setItem('cart', JSON.stringify(this.cartItems.value));
+}
+
+private loadCart(): void {
+  const cart = localStorage.getItem('cart');
+  if (cart) {
+    this.cartItems.next(JSON.parse(cart));
+  }
+}
+```
+
+### 6.3 Integración con WhatsApp
+
+Para completar la compra, se utiliza la API de WhatsApp:
+
+```typescript
+sendToWhatsApp(): void {
+  const items = this.cartItems.value;
+  let message = 'Hola, me gustaría comprar:\n\n';
+  
+  items.forEach(item => {
+    message += `- ${item.name} x${item.quantity}: $${(item.price * item.quantity).toFixed(2)}\n`;
+  });
+  
+  const total = this.getTotalPrice();
+  message += `\nTotal: $${total.toFixed(2)}`;
+  
+  const encodedMessage = encodeURIComponent(message);
+  window.open(`https://wa.me/1234567890?text=${encodedMessage}`, '_blank');
+}
+```
+
+## 7. Subida de imágenes
+
+### 7.1 Frontend (Angular)
+
+Se utiliza FormData para enviar imágenes al backend:
+
+```typescript
+onSubmit(): void {
+  const formData = new FormData();
+  formData.append('name', this.productForm.get('name')?.value);
+  // ... otros campos ...
+  
+  if (this.selectedFile) {
+    formData.append('main_image', this.selectedFile);
+  }
+  
+  this.productService.createProduct(formData).subscribe({
+    // ...
+  });
+}
+```
+
+### 7.2 Backend (Laravel)
+
+En Laravel, se procesan y almacenan las imágenes:
+
+```php
+public function store(Request $request)
+{
+    $validated = $request->validate([
+        'name' => 'required|string|max:255',
+        'main_image' => 'nullable|image|max:2048',
+        // ... otras validaciones ...
+    ]);
+    
+    if ($request->hasFile('main_image')) {
+        $imagePath = $request->file('main_image')->store('products', 'public');
+        $validated['main_image'] = $imagePath;
+    }
+    
+    $product = Product::create($validated);
+    
+    return response()->json($product, 201);
+}
+```
+
+## 8. Optimización y rendimiento
+
+### 8.1 Lazy loading
+
+Las rutas de Angular utilizan lazy loading para cargar módulos bajo demanda:
+
+```typescript
+const routes: Routes = [
+  {
+    path: 'admin',
+    loadChildren: () => import('./features/admin/admin.routes').then(m => m.ADMIN_ROUTES),
+    canActivate: [AuthGuard]
+  }
+];
+```
+
+### 8.2 Caché de datos
+
+Se implementa caché para reducir llamadas a la API:
+
+```typescript
+getSettings(): Observable<any> {
+  const cachedSettings = this.cache.get('settings');
+  if (cachedSettings) {
+    return of(cachedSettings);
+  }
+  
+  return this.apiService.get<any>('settings').pipe(
+    tap(settings => {
+      this.cache.set('settings', settings, 5 * 60 * 1000); // 5 minutos
+    })
+  );
+}
+```
+
+### 8.3 Optimización de imágenes
+
+- Las imágenes se comprimen en el servidor
+- Se utilizan miniaturas para listas de productos
+- Se cargan de forma progresiva (lazy loading)
+
+## 9. Despliegue
+
+### 9.1 Frontend (Angular)
+
+Para compilar y desplegar el frontend:
+
+```bash
+# Compilar para producción
+ng build --prod
+
+# Los archivos generados estarán en la carpeta dist/
+# Estos archivos deben copiarse al servidor web (Apache, Nginx, etc.)
+```
+
+### 9.2 Backend (Laravel)
+
+Para preparar el backend para producción:
+
+```bash
+# Instalar dependencias

@@ -3,7 +3,9 @@
   <div class="login-card">
     <div class="login-header">
       <div class="logo-container">
-        <img *ngIf="logoUrl" [src]="logoUrl" alt="Logo" class="logo">
+        <a routerLink="/">
+          <img *ngIf="logoUrl" [src]="logoUrl" alt="Logo" class="logo">
+        </a>
       </div>
       <h2 class="title">Iniciar sesión</h2>
       <p class="subtitle">Accede a tu cuenta para gestionar tus productos</p>

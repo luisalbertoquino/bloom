@@ -1,160 +1,153 @@
 <!-- src/app/features/store/product-detail/product-detail.component.html -->
 <div class="flex flex-col min-h-screen">
-    <!-- Navbar -->
-    <app-navbar></app-navbar>
-  
-    <!-- Estado de carga -->
-    <div *ngIf="isLoading" class="flex justify-center items-center py-20">
-      <div class="flex flex-col items-center">
-        <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
-        <p class="mt-4 text-gray-600">Cargando producto...</p>
-      </div>
+  <!-- Navbar -->
+  <app-navbar></app-navbar>
+
+  <!-- Estado de carga -->
+  <div *ngIf="isLoading" class="flex justify-center items-center py-20">
+    <div class="flex flex-col items-center">
+      <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+      <p class="mt-4 text-gray-600">Cargando producto...</p>
     </div>
-  
-    <!-- Mensaje de error -->
-    <div *ngIf="errorMessage" class="container mx-auto px-4 py-20">
-      <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
-        <p>{{ errorMessage }}</p>
-        <a routerLink="/productos" class="text-primary hover:underline mt-2 inline-block">
-          Volver a productos
-        </a>
-      </div>
-    </div>
-  
-    <!-- Contenido principal (solo se muestra cuando no está cargando y no hay error) -->
-    <div *ngIf="!isLoading && !errorMessage && product" class="flex-grow">
-      <div class="container mx-auto px-4 py-12">
-        <!-- Breadcrumb mejorado -->
-        <nav class="mt-8 mb-8 text-sm" aria-label="Breadcrumb">
-          <ol class="inline-flex items-center space-x-1 md:space-x-3 mt-4">
-            <li class="inline-flex items-center">
-              <a routerLink="/" class="inline-flex items-center text-gray-600 hover:text-primary">
-                Inicio
-              </a>
-            </li>
-            <li class="text-gray-400">/</li>
-            <li class="inline-flex items-center">
-              <a routerLink="/productos" class="inline-flex items-center text-gray-600 hover:text-primary">
-                Productos
-              </a>
-            </li>
-            <li class="text-gray-400">/</li>
-            <li class="inline-flex items-center">
-              <span class="text-primary">{{ product.name }}</span>
-            </li>
-          </ol>
-        </nav>
-        
-  
-        <!-- Detalles del producto -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-12">
-          <!-- Imagen del producto -->
-          <div class="bg-white p-4 rounded-lg shadow-md">
-            <img [src]="getImageUrl(product.main_image)" [alt]="product.name" class="w-full h-auto object-contain rounded">
-            
-            <!-- Galería de imágenes (si existe) -->
-            <div *ngIf="product.images && product.images.length > 0" class="grid grid-cols-4 gap-2 mt-4">
-              <div *ngFor="let image of product.images" class="cursor-pointer border hover:border-primary p-1 rounded">
-                <img [src]="getImageUrl(image.url)" [alt]="product.name" class="w-full h-16 object-cover">
-              </div>
-            </div>
-          </div>
-          
-          <!-- Información del producto -->
-          <div>
-            <h1 class="text-3xl font-bold text-gray-800 mb-4">{{ product.name }}</h1>
-            
-            <p class="text-2xl text-primary font-bold mb-6">${{ product.price.toFixed(2) }}</p>
-            
-            <div class="mb-6">
-              <p class="text-gray-600" [innerHTML]="product.description"></p>
-            </div>
-            
-            <!-- Disponibilidad -->
-            <div class="mb-6">
-              <p class="text-gray-700">
-                <span class="font-medium">Disponibilidad:</span> 
-                <span *ngIf="product.stock > 0" class="text-green-600">En stock ({{ product.stock }} disponibles)</span>
-                <span *ngIf="product.stock <= 0" class="text-red-600">Agotado</span>
-              </p>
-            </div>
-            
-            <!-- Selección de cantidad -->
-            <div class="mb-8">
-              <label for="quantity" class="block text-gray-700 font-medium mb-2">Cantidad</label>
-              <div class="flex">
-                <button (click)="decreaseQuantity()" class="bg-gray-200 px-4 py-2 rounded-l-md hover:bg-gray-300">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4" />
-                  </svg>
-                </button>
-                <input type="number" id="quantity" [(ngModel)]="quantity" min="1" max="10" 
-                      class="border-t border-b px-4 py-2 w-16 text-center" readonly>
-                <button (click)="increaseQuantity()" class="bg-gray-200 px-4 py-2 rounded-r-md hover:bg-gray-300">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                  </svg>
-                </button>
-              </div>
-            </div>
-            
-            <!-- Botones de acción -->
-            <div class="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
-              <button (click)="addToCart()" class="bg-gray-800 text-white py-3 px-6 rounded-md hover:bg-gray-700 flex items-center justify-center">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-                </svg>
-                Agregar al carrito
-              </button>
-              
-              <button (click)="buyNow()" class="bg-primary text-white py-3 px-6 rounded-md hover:bg-primary-dark flex items-center justify-center">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-                </svg>
-                Comprar ahora
-              </button>
-            </div>
-          </div>
-        </div>
-  
-        <!-- Productos relacionados -->
-        <div *ngIf="relatedProducts.length > 0" class="mt-16">
-          <h2 class="text-2xl font-bold text-gray-800 mb-8">Productos relacionados</h2>
-          
-          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            <div *ngFor="let relatedProduct of relatedProducts" class="bg-white rounded-lg shadow-md overflow-hidden group">
-              <div class="relative">
-                <a [routerLink]="['/productos', relatedProduct.id]">
-                  <img [src]="getImageUrl(relatedProduct.main_image)" [alt]="relatedProduct.name" 
-                       class="w-full h-48 object-cover">
-                </a>
-                
-                <!-- Overlay con botones -->
-                <div class="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center opacity-0 
-                            group-hover:opacity-100 transition-opacity duration-300">
-                  <a [routerLink]="['/productos', relatedProduct.id]" class="bg-white p-2 rounded-full mx-1 hover:bg-primary hover:text-white transition-colors">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                    </svg>
-                  </a>
-                </div>
-              </div>
-              
-              <div class="p-4">
-                <a [routerLink]="['/productos', relatedProduct.id]" class="block">
-                  <h3 class="font-bold text-lg mb-1 text-gray-800 hover:text-primary transition-colors">
-                    {{ relatedProduct.name }}
-                  </h3>
-                </a>
-                <p class="text-primary font-medium">${{ relatedProduct.price.toFixed(2) }}</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  
-    <!-- Footer -->
-    <app-footer></app-footer>
   </div>
+
+  <!-- Mensaje de error -->
+  <div *ngIf="errorMessage" class="container mx-auto px-4 py-20">
+    <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+      <p>{{ errorMessage }}</p>
+      <a routerLink="/productos" class="text-primary hover:underline mt-2 inline-block">
+        Volver a productos
+      </a>
+    </div>
+  </div>
+
+  <!-- Contenido principal (solo se muestra cuando no está cargando y no hay error) -->
+  <div *ngIf="!isLoading && !errorMessage && product" class="flex-grow">
+    <div class="container mx-auto px-4 py-12">
+      <!-- Breadcrumb mejorado -->
+      <nav class="mt-8 mb-8 text-sm" aria-label="Breadcrumb">
+        <ol class="inline-flex items-center space-x-1 md:space-x-3 mt-4">
+          <li class="inline-flex items-center">
+            <a routerLink="/" class="inline-flex items-center text-gray-600 hover:text-primary">
+              Inicio
+            </a>
+          </li>
+          <li class="text-gray-400">/</li>
+          <li class="inline-flex items-center">
+            <a routerLink="/productos" class="inline-flex items-center text-gray-600 hover:text-primary">
+              Productos
+            </a>
+          </li>
+          <li class="text-gray-400">/</li>
+          <li class="inline-flex items-center">
+            <span class="text-primary">{{ product.name }}</span>
+          </li>
+        </ol>
+      </nav>
+      
+
+      <!-- Detalles del producto -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-12">
+        <!-- Imagen del producto (sin galería de imágenes) -->
+        <div class="bg-white p-4 rounded-lg shadow-md">
+          <img [src]="getImageUrl(product.main_image)" [alt]="product.name" class="w-full h-auto object-contain rounded">
+        </div>
+        
+        <!-- Información del producto -->
+        <div>
+          <h1 class="text-3xl font-bold text-gray-800 mb-4">{{ product.name }}</h1>
+          
+          <p class="text-2xl text-primary font-bold mb-6">${{ product.price.toFixed(2) }}</p>
+          
+          <div class="mb-6">
+            <p class="text-gray-600" [innerHTML]="product.description"></p>
+          </div>
+          
+          <!-- Disponibilidad -->
+          <div class="mb-6">
+            <p class="text-gray-700">
+              <span class="font-medium">Disponibilidad:</span> 
+              <span *ngIf="product.stock > 0" class="text-green-600">En stock ({{ product.stock }} disponibles)</span>
+              <span *ngIf="product.stock <= 0" class="text-red-600">Agotado</span>
+            </p>
+          </div>
+          
+          <!-- Selección de cantidad -->
+          <div class="mb-8">
+            <label for="quantity" class="block text-gray-700 font-medium mb-2">Cantidad</label>
+            <div class="flex">
+              <button (click)="decreaseQuantity()" class="bg-gray-200 px-4 py-2 rounded-l-md hover:bg-gray-300">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4" />
+                </svg>
+              </button>
+              <input type="number" id="quantity" [(ngModel)]="quantity" min="1" max="10" 
+                    class="border-t border-b px-4 py-2 w-16 text-center" readonly>
+              <button (click)="increaseQuantity()" class="bg-gray-200 px-4 py-2 rounded-r-md hover:bg-gray-300">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                </svg>
+              </button>
+            </div>
+          </div>
+          
+          <!-- Botones de acción -->
+          <div class="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
+            <button (click)="addToCart()" class="bg-gray-800 text-white py-3 px-6 rounded-md hover:bg-gray-700 flex items-center justify-center">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+              </svg>
+              Agregar al carrito
+            </button>
+            
+            <button (click)="buyNow()" class="bg-primary text-white py-3 px-6 rounded-md hover:bg-primary-dark flex items-center justify-center">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+              </svg>
+              Comprar ahora
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Productos relacionados -->
+      <div *ngIf="relatedProducts.length > 0" class="mt-16">
+        <h2 class="text-2xl font-bold text-gray-800 mb-8">Productos relacionados</h2>
+        
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div *ngFor="let relatedProduct of relatedProducts" class="bg-white rounded-lg shadow-md overflow-hidden group">
+            <div class="relative">
+              <a [routerLink]="['/productos', relatedProduct.id]">
+                <img [src]="getImageUrl(relatedProduct.main_image)" [alt]="relatedProduct.name" 
+                     class="w-full h-48 object-cover">
+              </a>
+              
+              <!-- Overlay con botones -->
+              <div class="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center opacity-0 
+                          group-hover:opacity-100 transition-opacity duration-300">
+                <a [routerLink]="['/productos', relatedProduct.id]" class="bg-white p-2 rounded-full mx-1 hover:bg-primary hover:text-white transition-colors">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                  </svg>
+                </a>
+              </div>
+            </div>
+            
+            <div class="p-4">
+              <a [routerLink]="['/productos', relatedProduct.id]" class="block">
+                <h3 class="font-bold text-lg mb-1 text-gray-800 hover:text-primary transition-colors">
+                  {{ relatedProduct.name }}
+                </h3>
+              </a>
+              <p class="text-primary font-medium">${{ relatedProduct.price.toFixed(2) }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <app-footer></app-footer>
+</div>

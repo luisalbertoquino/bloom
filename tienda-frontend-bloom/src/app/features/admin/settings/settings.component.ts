@@ -24,6 +24,7 @@ export class SettingsComponent implements OnInit {
   isSubmitting = false;
   errorMessage = '';
   successMessage = '';
+  showUpdateConfirmation = false;
   selectedLogoFile: File | null = null;
   selectedBannerFile: File | null = null;
   selectedFaviconFile: File | null = null;
@@ -34,6 +35,14 @@ export class SettingsComponent implements OnInit {
   
   // Configuraciones actuales
   currentSettings: any = {};
+
+  // Errores de validación de archivos
+  logoError: string | null = null;
+  bannerError: string | null = null;
+  faviconError: string | null = null;
+  
+  // Tamaño máximo de archivo (2MB en bytes)
+  maxFileSize = 2 * 1024 * 1024;
 
   constructor(
     private settingsService: SettingsService,
@@ -109,10 +118,31 @@ export class SettingsComponent implements OnInit {
     });
   }
 
+  // Método para validar el tamaño del archivo
+  validateFileSize(file: File): boolean {
+    return file.size <= this.maxFileSize;
+  }
+
+  // Convertir bytes a MB para mensajes de error
+  formatFileSize(bytes: number): string {
+    return (bytes / (1024 * 1024)).toFixed(2);
+  }
+
   onLogoSelected(event: Event): void {
     const element = event.target as HTMLInputElement;
     if (element.files && element.files.length > 0) {
-      this.selectedLogoFile = element.files[0];
+      const file = element.files[0];
+      
+      // Validar tamaño
+      if (!this.validateFileSize(file)) {
+        this.logoError = `El archivo es demasiado grande (${this.formatFileSize(file.size)} MB). Máximo permitido: 2 MB.`;
+        this.selectedLogoFile = null;
+        element.value = ''; // Limpiar el input
+        return;
+      }
+      
+      this.logoError = null;
+      this.selectedLogoFile = file;
       
       // Crear previsualización
       const reader = new FileReader();
@@ -126,7 +156,18 @@ export class SettingsComponent implements OnInit {
   onBannerSelected(event: Event): void {
     const element = event.target as HTMLInputElement;
     if (element.files && element.files.length > 0) {
-      this.selectedBannerFile = element.files[0];
+      const file = element.files[0];
+      
+      // Validar tamaño
+      if (!this.validateFileSize(file)) {
+        this.bannerError = `El archivo es demasiado grande (${this.formatFileSize(file.size)} MB). Máximo permitido: 2 MB.`;
+        this.selectedBannerFile = null;
+        element.value = ''; // Limpiar el input
+        return;
+      }
+      
+      this.bannerError = null;
+      this.selectedBannerFile = file;
       
       // Crear previsualización
       const reader = new FileReader();
@@ -140,7 +181,18 @@ export class SettingsComponent implements OnInit {
   onFaviconSelected(event: Event): void {
     const element = event.target as HTMLInputElement;
     if (element.files && element.files.length > 0) {
-      this.selectedFaviconFile = element.files[0];
+      const file = element.files[0];
+      
+      // Validar tamaño
+      if (!this.validateFileSize(file)) {
+        this.faviconError = `El archivo es demasiado grande (${this.formatFileSize(file.size)} MB). Máximo permitido: 2 MB.`;
+        this.selectedFaviconFile = null;
+        element.value = ''; // Limpiar el input
+        return;
+      }
+      
+      this.faviconError = null;
+      this.selectedFaviconFile = file;
       
       // Crear previsualización
       const reader = new FileReader();
@@ -151,95 +203,113 @@ export class SettingsComponent implements OnInit {
     }
   }
 
-  // Modificación del método onSubmit en SettingsComponent
-onSubmit(): void {
-  if (this.settingsForm.invalid) {
-    // Marcar todos los campos como tocados para mostrar los errores
-    Object.keys(this.settingsForm.controls).forEach(key => {
-      const control = this.settingsForm.get(key);
-      control?.markAsTouched();
-    });
-    return;
-  }
-
-  this.isSubmitting = true;
-  this.errorMessage = '';
-  this.successMessage = '';
-
-  const formData = new FormData();
-  
-  // Agregar todos los campos del formulario
-  Object.keys(this.settingsForm.value).forEach(key => {
-    formData.append(key, this.settingsForm.get(key)?.value);
-  });
-  
-  // Agregar archivos si fueron seleccionados
-  if (this.selectedLogoFile) {
-    formData.append('logo', this.selectedLogoFile);
-  }
-  
-  if (this.selectedBannerFile) {
-    formData.append('banner_image', this.selectedBannerFile);
-  }
-  
-  if (this.selectedFaviconFile) {
-    formData.append('favicon', this.selectedFaviconFile);
-  }
-
-  this.settingsService.updateSettings(formData).subscribe({
-    next: (response) => {
-      this.isSubmitting = false;
-      this.successMessage = 'Configuración actualizada correctamente. Recargando página...';
-      
-      // Actualizar el tema
-      this.themeService.initializeTheme();
-      
-      // Esperar un momento para que el usuario vea el mensaje
-      setTimeout(() => {
-        // Refrescar la página completa
-        window.location.reload();
-      }, 1500);
-    },
-    error: (error) => {
-      this.isSubmitting = false;
-      console.error('Error updating settings', error);
-      
-      // Verificar si es un error de autenticación
-      if (error.status === 401) {
-        this.errorMessage = 'Tu sesión ha expirado. Por favor, inicia sesión nuevamente.';
-        // Redirigir al login después de 2 segundos
-        setTimeout(() => {
-          this.authService.logout().subscribe({
-            next: () => {
-              // La redirección se maneja en el servicio AuthService
-            },
-            error: () => {
-              // Forzar redirección en caso de error
-              window.location.href = '/login';
-            }
-          });
-        }, 2000);
-      } else if (error.status === 419) {
-        // Error específico de CSRF token mismatch
-        this.errorMessage = 'Error de seguridad. Por favor, intenta de nuevo.';
-      } else if (error.error && error.error.message) {
-        this.errorMessage = error.error.message;
-      } else if (error.error && error.error.errors) {
-        this.errorMessage = Object.values(error.error.errors)[0] as string;
-      } else {
-        this.errorMessage = 'Error al guardar la configuración. Por favor, inténtalo de nuevo.';
-      }
-      
-      setTimeout(() => this.errorMessage = '', 5000);
+  onSubmit(): void {
+    if (this.settingsForm.invalid) {
+      // Marcar todos los campos como tocados para mostrar los errores
+      Object.keys(this.settingsForm.controls).forEach(key => {
+        const control = this.settingsForm.get(key);
+        control?.markAsTouched();
+      });
+      return;
     }
-  });
-}
+
+    // Verificar si hay errores de validación de archivos
+    if (this.logoError || this.bannerError || this.faviconError) {
+      this.errorMessage = 'Corrige los errores en los archivos antes de continuar.';
+      setTimeout(() => this.errorMessage = '', 5000);
+      return;
+    }
+
+    this.isSubmitting = true;
+    this.errorMessage = '';
+    this.successMessage = '';
+
+    const formData = new FormData();
+    
+    // Agregar todos los campos del formulario
+    Object.keys(this.settingsForm.value).forEach(key => {
+      formData.append(key, this.settingsForm.get(key)?.value);
+    });
+    
+    // Agregar archivos si fueron seleccionados
+    if (this.selectedLogoFile) {
+      formData.append('logo', this.selectedLogoFile);
+    }
+    
+    if (this.selectedBannerFile) {
+      formData.append('banner_image', this.selectedBannerFile);
+    }
+    
+    if (this.selectedFaviconFile) {
+      formData.append('favicon', this.selectedFaviconFile);
+    }
+
+    this.settingsService.updateSettings(formData).subscribe({
+      next: (response) => {
+        this.isSubmitting = false;
+        this.successMessage = 'Configuración actualizada correctamente.';
+        
+        // Actualizar el tema
+        this.themeService.initializeTheme();
+        
+        // Mostrar mensaje de confirmación en lugar de recargar automáticamente
+        this.showUpdateConfirmation = true;
+      },
+      error: (error) => {
+        this.isSubmitting = false;
+        console.error('Error updating settings', error);
+        
+        // Verificar si es un error de autenticación
+        if (error.status === 401) {
+          this.errorMessage = 'Tu sesión ha expirado. Por favor, inicia sesión nuevamente.';
+          // Redirigir al login después de 2 segundos
+          setTimeout(() => {
+            this.authService.logout().subscribe({
+              next: () => {
+                // La redirección se maneja en el servicio AuthService
+              },
+              error: () => {
+                // Forzar redirección en caso de error
+                window.location.href = '/login';
+              }
+            });
+          }, 2000);
+        } else if (error.status === 419) {
+          // Error específico de CSRF token mismatch
+          this.errorMessage = 'Error de seguridad. Por favor, intenta de nuevo.';
+        } else if (error.error && error.error.message) {
+          this.errorMessage = error.error.message;
+        } else if (error.error && error.error.errors) {
+          this.errorMessage = Object.values(error.error.errors)[0] as string;
+        } else {
+          this.errorMessage = 'Error al guardar la configuración. Por favor, inténtalo de nuevo.';
+        }
+        
+        setTimeout(() => this.errorMessage = '', 5000);
+      }
+    });
+  }
+
+  // Método para recargar la página cuando el usuario confirma
+  reloadPage(): void {
+    window.location.reload();
+  }
+
+  // Método para cerrar el mensaje de confirmación sin recargar
+  closeConfirmation(): void {
+    this.showUpdateConfirmation = false;
+    this.successMessage = '';
+    this.loadSettings(); // Recargar los ajustes para reflejar los últimos cambios
+  }
 
   resetForm(): void {
     this.loadSettings();
     this.selectedLogoFile = null;
     this.selectedBannerFile = null;
     this.selectedFaviconFile = null;
+    this.logoError = null;
+    this.bannerError = null;
+    this.faviconError = null;
     
     // Mantener las previsualizaciones actuales
     if (this.currentSettings.logo) {

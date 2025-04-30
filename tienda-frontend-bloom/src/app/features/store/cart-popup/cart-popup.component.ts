@@ -17,7 +17,7 @@ export class CartPopupComponent implements OnInit {
   
   cartItems: CartItem[] = [];
   totalPrice = 0;
-  apiUrl = 'http://localhost:8000/storage/'; // Base URL para imágenes
+  apiUrl = environment.storageUrl; // Base URL para imágenes
 
   constructor(private cartService: CartService) { }
 

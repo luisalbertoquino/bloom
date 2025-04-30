@@ -36,6 +36,10 @@ export class ProductManagementComponent implements OnInit {
   searchTerm = '';
   filterCategory = 0; // 0 significa todas las categorías
 
+  // Control de errores en la carga de imágenes
+  imageError: string | null = null;
+  maxFileSize = 2 * 1024 * 1024; // 2MB en bytes
+
   constructor(
     private productService: ProductService,
     private categoryService: CategoryService,
@@ -140,6 +144,7 @@ export class ProductManagementComponent implements OnInit {
     });
     
     this.selectedFile = null;
+    this.imageError = null;
   }
 
   cancelForm(): void {
@@ -159,17 +164,57 @@ export class ProductManagementComponent implements OnInit {
     this.selectedFile = null;
     this.errorMessage = '';
     this.successMessage = '';
+    this.imageError = null;
+  }
+
+  // Validar tamaño del archivo
+  validateFileSize(file: File): boolean {
+    return file.size <= this.maxFileSize;
+  }
+
+  // Convertir bytes a MB para mensajes de error
+  formatFileSize(bytes: number): string {
+    return (bytes / (1024 * 1024)).toFixed(2);
   }
 
   onFileSelected(event: Event): void {
     const element = event.target as HTMLInputElement;
     if (element.files && element.files.length > 0) {
-      this.selectedFile = element.files[0];
+      const file = element.files[0];
+      
+      // Validar tamaño
+      if (!this.validateFileSize(file)) {
+        this.imageError = `El archivo es demasiado grande (${this.formatFileSize(file.size)} MB). Máximo permitido: 2 MB.`;
+        this.selectedFile = null;
+        element.value = ''; // Limpiar el input
+        return;
+      }
+      
+      this.imageError = null;
+      this.selectedFile = file;
     }
   }
 
   onSubmit(): void {
     if (this.productForm.invalid) {
+      // Marcar todos los controles como tocados para mostrar errores
+      Object.keys(this.productForm.controls).forEach(key => {
+        this.productForm.get(key)?.markAsTouched();
+      });
+      return;
+    }
+
+    // Verificar si hay error en la imagen
+    if (this.imageError) {
+      this.errorMessage = 'Por favor, corrige los errores en la imagen antes de continuar.';
+      setTimeout(() => this.errorMessage = '', 3000);
+      return;
+    }
+
+    // Validar que exista una imagen principal para productos nuevos
+    if (!this.isEditing && !this.selectedFile) {
+      this.errorMessage = 'La imagen principal es obligatoria para nuevos productos.';
+      setTimeout(() => this.errorMessage = '', 3000);
       return;
     }
 

@@ -34,10 +34,7 @@ export const routes: Routes = [
     // Puedes crear un componente blog-list para listar todos los artículos
     loadComponent: () => import('./features/store/blog-list/blog-list.component').then(m => m.BlogListComponent)
   },
-  {
-    path: 'carrito',
-    loadComponent: () => import('./features/store/cart/cart.component').then(m => m.CartComponent)
-  },
+
   
   // Rutas administrativas protegidas por AuthGuard
   {

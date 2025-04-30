@@ -41,6 +41,9 @@ export class ProductListComponent implements OnInit {
   // Términos de búsqueda
   searchTerm = '';
 
+  // Opción de ordenación
+  sortOption = 'newest'; // Valor por defecto
+
   // Configuración de paginación
   currentPage = 1;
   pageSize = 12; // Productos por página
@@ -62,10 +65,17 @@ export class ProductListComponent implements OnInit {
     this.route.queryParams.subscribe(params => {
       // Obtener la página de los parámetros o usar 1 por defecto
       this.currentPage = parseInt(params['page'] || '1', 10);
+      
       // Obtener el término de búsqueda si existe
       const searchParam = params['search'] || '';
       if (searchParam !== this.searchTerm) {
         this.searchTerm = searchParam;
+      }
+      
+      // Obtener la opción de ordenación si existe
+      const sortParam = params['sort'] || 'newest';
+      if (sortParam !== this.sortOption) {
+        this.sortOption = sortParam;
       }
       
       // Cargar los productos
@@ -88,6 +98,9 @@ export class ProductListComponent implements OnInit {
           
           // Aplicar filtro de búsqueda si hay un término
           this.applySearchFilter();
+          
+          // Aplicar ordenación
+          this.applySorting();
         }
         this.isLoading = false;
       },
@@ -117,9 +130,64 @@ export class ProductListComponent implements OnInit {
     if (this.currentPage < 1) this.currentPage = 1;
     if (this.totalPages === 0) this.totalPages = 1;
     if (this.currentPage > this.totalPages) this.currentPage = this.totalPages;
+  }
+
+  // Aplicar ordenación a los productos filtrados
+  applySorting(): void {
+    // Clonar el array para no modificar el original directamente
+    const products = [...this.filteredProducts];
+
+    // Ordenar según la opción seleccionada
+    switch (this.sortOption) {
+      case 'newest':
+        // Ordenar por fecha de creación (de más reciente a más antiguo)
+        products.sort((a, b) => {
+          // Asegurarse de que created_at existe antes de usarlo
+          const dateA = a.created_at ? new Date(a.created_at).getTime() : 0;
+          const dateB = b.created_at ? new Date(b.created_at).getTime() : 0;
+          return dateB - dateA;
+        });
+        break;
+      
+      case 'price-asc':
+        products.sort((a, b) => a.price - b.price);
+        break;
+      
+      case 'price-desc':
+        products.sort((a, b) => b.price - a.price);
+        break;
+      
+      case 'name-asc':
+        products.sort((a, b) => a.name.localeCompare(b.name));
+        break;
+      
+      case 'name-desc':
+        products.sort((a, b) => b.name.localeCompare(a.name));
+        break;
+      
+      default:
+        // Por defecto, no ordenar
+        break;
+    }
+
+    this.filteredProducts = products;
     
-    // Paginar los productos filtrados
+    // Actualizar la URL con la opción de ordenación
+    this.updateUrlParams();
+    
+    // Paginar los productos ordenados
     this.paginateProducts();
+  }
+
+  // Actualizar parámetros de URL
+  updateUrlParams(): void {
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: {
+        sort: this.sortOption
+      },
+      queryParamsHandling: 'merge' // Mantener otros parámetros
+    });
   }
 
   // Método para iniciar una búsqueda

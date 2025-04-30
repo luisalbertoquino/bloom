@@ -4,101 +4,101 @@
   <app-navbar></app-navbar>
 
   <!-- Estado de carga -->
-  <div *ngIf="isLoading" class="flex justify-center items-center py-20">
+  <div *ngIf="isLoading" class="flex justify-center items-center py-20 flex-grow">
     <div class="flex flex-col items-center">
       <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
-      <p class="mt-4 text-gray-600">Cargando artículo...</p>
+      <p class="mt-4 text-gray-600">Cargando noticia...</p>
     </div>
   </div>
 
   <!-- Contenido principal (solo se muestra cuando no está cargando) -->
-  <main *ngIf="!isLoading && post" class="flex-grow">
-    <!-- Banner del artículo -->
-    <div class="relative w-full">
-      <img [src]="getImageUrl(post.banner_image)" [alt]="post.title" 
-           class="w-full h-64 md:h-96 object-cover">
-      <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
-      <div class="absolute bottom-0 left-0 right-0 p-6 md:p-10">
-        <div class="container mx-auto">
-          <h1 class="text-3xl md:text-4xl font-bold text-white mb-2">{{ post.title }}</h1>
-          <p *ngIf="post.created_at" class="text-white/80 text-lg">{{ formatDate(post.created_at) }}</p>
-        </div>
-      </div>
-    </div>
-
-    <!-- Breadcrumb debajo del banner -->
-    <div class="bg-gray-100 py-7">
-      <div class="container mx-auto px-4">
-        <nav>
-          <ol class="flex text-sm text-gray-600">
-            <li>
-              <a routerLink="/" class="hover:text-primary">Inicio</a>
-            </li>
-            <li class="mx-2">/</li>
-            <li>
-              <a routerLink="/blog" class="hover:text-primary">Blog</a>
-            </li>
-            <li class="mx-2">/</li>
-            <li class="text-primary">{{ post.title | slice:0:30 }}{{ post.title.length > 30 ? '...' : '' }}</li>
-          </ol>
-        </nav>
-      </div>
-    </div>
-
-    <!-- Contenido del artículo -->
-    <div class="container mx-auto px-4 py-10">
-      <div class="max-w-3xl mx-auto">
-        <!-- Metadatos del artículo -->
-        <div class="flex items-center justify-between mb-8 text-gray-600">
-          <div *ngIf="post.created_at" class="flex items-center">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-            </svg>
-            <span>{{ formatDate(post.created_at) }}</span>
-          </div>
-          <div *ngIf="post.featured" class="flex items-center">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-yellow-500" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M12 1l3.22 6.52 7.198.62-5.21 5.068 1.23 7.178-6.438-3.39-6.44 3.39 1.23-7.178-5.21-5.068 7.2-.62 3.22-6.52z"/>
-            </svg>
-            <span class="text-yellow-600">Artículo destacado</span>
+  <ng-container *ngIf="!isLoading && post">
+    <main class="flex-grow">
+      <!-- Banner del artículo -->
+      <div class="relative w-full">
+        <img [src]="getImageUrl(post.banner_image)" [alt]="post.title" 
+             class="w-full h-64 md:h-96 object-cover">
+        <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+        <div class="absolute bottom-0 left-0 right-0 p-6 md:p-10">
+          <div class="container mx-auto">
+            <h1 class="text-3xl md:text-4xl font-bold text-white mb-2">{{ post.title }}</h1>
+            <p *ngIf="post.created_at" class="text-white/80 text-lg">{{ formatDate(post.created_at) }}</p>
           </div>
         </div>
+      </div>
 
-        <!-- Contenido del artículo -->
-        <article class="prose prose-lg max-w-none">
-          <div *ngIf="sanitizedContent" [innerHTML]="sanitizedContent"></div>
-          <div *ngIf="!sanitizedContent" class="text-gray-600">
-            <p>No hay contenido disponible para este artículo.</p>
+      <!-- Breadcrumb debajo del banner -->
+      <div class="bg-gray-100 py-7">
+        <div class="container mx-auto px-4">
+          <nav>
+            <ol class="flex text-sm text-gray-600">
+              <li>
+                <a routerLink="/" class="hover:text-primary">Inicio</a>
+              </li>
+              <li class="mx-2">/</li>
+              <li>
+                <a routerLink="/blog" class="hover:text-primary">Blog</a>
+              </li>
+              <li class="mx-2">/</li>
+              <li class="text-primary">{{ post.title | slice:0:30 }}{{ post.title.length > 30 ? '...' : '' }}</li>
+            </ol>
+          </nav>
+        </div>
+      </div>
+
+      <!-- Contenido del artículo -->
+      <div class="container mx-auto px-4 py-10">
+        <div class="max-w-3xl mx-auto">
+          <!-- Metadatos del artículo -->
+          <div class="flex items-center justify-between mb-8 text-gray-600">
+            <div *ngIf="post.created_at" class="flex items-center">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+              <span>{{ formatDate(post.created_at) }}</span>
+            </div>
+            <div *ngIf="post.featured" class="flex items-center">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-yellow-500" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 1l3.22 6.52 7.198.62-5.21 5.068 1.23 7.178-6.438-3.39-6.44 3.39 1.23-7.178-5.21-5.068 7.2-.62 3.22-6.52z"/>
+              </svg>
+              <span class="text-yellow-600">Artículo destacado</span>
+            </div>
           </div>
-        </article>
 
-        <!-- Enlaces para compartir -->
-        <div class="mt-10 border-t border-gray-200 pt-6 social-share">
-          <h4 class="text-lg font-medium text-gray-800 mb-4">Comparte este artículo</h4>
-          <div class="flex space-x-4">
-            <button (click)="shareOnFacebook()" class="text-blue-600 hover:text-blue-800 transition-all hover:-translate-y-1">
-              <svg class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M18.77,7.46H14.5v-1.9c0-0.9,0.6-1.1,1-1.1h3V0.5h-4.33c-3.28,0-5.37,1.69-5.37,4.77v2.19H6v4.07h2.8v10.35h5.7V11.53h3.85L18.77,7.46z"></path>
-              </svg>
-            </button>
-            <button (click)="shareOnTwitter()" class="text-blue-400 hover:text-blue-600 transition-all hover:-translate-y-1">
-              <svg class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M23.44,4.83c-0.8,0.35-1.66,0.59-2.58,0.69c0.93-0.56,1.64-1.44,1.98-2.49c-0.87,0.52-1.83,0.89-2.85,1.09C19.12,3.17,18.02,2.5,16.77,2.5c-2.34,0-4.23,1.9-4.23,4.24c0,0.33,0.04,0.65,0.11,0.96C8.28,7.47,4.8,5.78,2.63,3.15c-0.37,0.63-0.58,1.37-0.58,2.15c0,1.47,0.75,2.77,1.89,3.53c-0.7-0.02-1.35-0.21-1.92-0.53c0,0.02,0,0.03,0,0.05c0,2.06,1.46,3.78,3.41,4.17c-0.36,0.1-0.73,0.15-1.12,0.15c-0.27,0-0.54-0.03-0.8-0.08c0.54,1.69,2.11,2.92,3.97,2.96c-1.45,1.14-3.28,1.82-5.28,1.82c-0.34,0-0.68-0.02-1.02-0.06C2.74,18.1,5.07,19,7.54,19c7.85,0,12.14-6.5,12.14-12.14c0-0.18,0-0.37-0.01-0.55C20.5,6.51,22.1,5.3,23.44,4.83z"></path>
-              </svg>
-            </button>
-            <button (click)="shareOnWhatsApp()" class="text-green-600 hover:text-green-800 transition-all hover:-translate-y-1">
-              <svg class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.582 2.128 2.182-.573c.978.58 1.911.928 3.145.929 3.178 0 5.767-2.587 5.768-5.766.001-3.187-2.575-5.77-5.764-5.771zm3.392 8.244c-.144.405-.837.774-1.17.824-.299.045-.677.063-1.092-.069-.252-.08-.575-.187-.988-.365-1.739-.751-2.874-2.502-2.961-2.617-.087-.116-.708-.94-.708-1.793s.448-1.273.607-1.446c.159-.173.346-.217.462-.217l.332.006c.106.005.249-.04.39.298.144.347.491 1.2.534 1.287.043.087.072.188.014.304-.058.116-.087.188-.173.289l-.26.304c-.087.086-.177.18-.076.354.101.174.449.741.964 1.201.662.591 1.221.774 1.394.86s.274.072.376-.043c.101-.116.433-.506.549-.68.116-.173.231-.145.39-.087s1.011.477 1.184.564.289.13.332.202c.045.72.045.477-..."></path>
-              </svg>
-            </button>
+          <!-- Contenido del artículo -->
+          <article class="prose prose-lg max-w-none">
+            <div *ngIf="sanitizedContent" [innerHTML]="sanitizedContent"></div>
+            <div *ngIf="!sanitizedContent" class="text-gray-600">
+              <p>No hay contenido disponible para este artículo.</p>
+            </div>
+          </article>
+
+          <!-- Enlaces para compartir -->
+          <div class="mt-10 border-t border-gray-200 pt-6 social-share">
+            <h4 class="text-lg font-medium text-gray-800 mb-4">Comparte este artículo</h4>
+            <div class="flex space-x-4">
+              <button (click)="shareOnFacebook()" class="text-blue-600 hover:text-blue-800 transition-all hover:-translate-y-1">
+                <svg class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M18.77,7.46H14.5v-1.9c0-0.9,0.6-1.1,1-1.1h3V0.5h-4.33c-3.28,0-5.37,1.69-5.37,4.77v2.19H6v4.07h2.8v10.35h5.7V11.53h3.85L18.77,7.46z"></path>
+                </svg>
+              </button>
+              <button (click)="shareOnTwitter()" class="text-blue-400 hover:text-blue-600 transition-all hover:-translate-y-1">
+                <svg class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M23.44,4.83c-0.8,0.35-1.66,0.59-2.58,0.69c0.93-0.56,1.64-1.44,1.98-2.49c-0.87,0.52-1.83,0.89-2.85,1.09C19.12,3.17,18.02,2.5,16.77,2.5c-2.34,0-4.23,1.9-4.23,4.24c0,0.33,0.04,0.65,0.11,0.96C8.28,7.47,4.8,5.78,2.63,3.15c-0.37,0.63-0.58,1.37-0.58,2.15c0,1.47,0.75,2.77,1.89,3.53c-0.7-0.02-1.35-0.21-1.92-0.53c0,0.02,0,0.03,0,0.05c0,2.06,1.46,3.78,3.41,4.17c-0.36,0.1-0.73,0.15-1.12,0.15c-0.27,0-0.54-0.03-0.8-0.08c0.54,1.69,2.11,2.92,3.97,2.96c-1.45,1.14-3.28,1.82-5.28,1.82c-0.34,0-0.68-0.02-1.02-0.06C2.74,18.1,5.07,19,7.54,19c7.85,0,12.14-6.5,12.14-12.14c0-0.18,0-0.37-0.01-0.55C20.5,6.51,22.1,5.3,23.44,4.83z"></path>
+                </svg>
+              </button>
+              <button (click)="shareOnWhatsApp()" class="text-green-600 hover:text-green-800 transition-all hover:-translate-y-1">
+                <svg class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.582 2.128 2.182-.573c.978.58 1.911.928 3.145.929 3.178 0 5.767-2.587 5.768-5.766.001-3.187-2.575-5.77-5.764-5.771zm3.392 8.244c-.144.405-.837.774-1.17.824-.299.045-.677.063-1.092-.069-.252-.08-.575-.187-.988-.365-1.739-.751-2.874-2.502-2.961-2.617-.087-.116-.708-.94-.708-1.793s.448-1.273.607-1.446c.159-.173.346-.217.462-.217l.332.006c.106.005.249-.04.39.298.144.347.491 1.2.534 1.287.043.087.072.188.014.304-.058.116-.087.188-.173.289l-.26.304c-.087.086-.177.18-.076.354.101.174.449.741.964 1.201.662.591 1.221.774 1.394.86s.274.072.376-.043c.101-.116.433-.506.549-.68.116-.173.231-.145.39-.087s1.011.477 1.184.564.289.13.332.202c.045.72.045.477-..."></path>
+                </svg>
+              </button>
+            </div>
           </div>
         </div>
-
       </div>
-    </div>
-  </main>
+    </main>
 
-
-   <!-- Footer -->
-   <app-footer></app-footer>
+    <!-- Footer -->
+    <app-footer></app-footer>
+  </ng-container>
 </div>

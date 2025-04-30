@@ -1,5 +1,5 @@
 // src/app/features/admin/layout/admin-layout.component.ts
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { AuthService, User } from '../../../core/services/auth.service';
@@ -16,17 +16,21 @@ import { environment } from '../../../../enviroments/enviroment';
     RouterModule
   ]
 })
-export class AdminLayoutComponent implements OnInit {
+export class AdminLayoutComponent implements OnInit, OnDestroy {
   isSidebarOpen = true;
   currentUser: User | null = null;
   isUserMenuOpen = false;
-  logoUrl = '/assets/images/logo.png'; // Ruta por defecto
-  siteTitle = 'Admin Panel'; // Texto por defecto
+  logoUrl = '/assets/images/logo.png';
+  siteTitle = 'Admin Panel';
+  isMobile = false;
+  private mobileBreakpoint = 768; // Breakpoint para considerar como móvil
 
   constructor(
     private authService: AuthService,
     private settingsService: SettingsService
-  ) { }
+  ) { 
+    this.checkScreenSize();
+  }
 
   ngOnInit(): void {
     // Cargar datos del usuario
@@ -36,6 +40,13 @@ export class AdminLayoutComponent implements OnInit {
 
     // Cargar configuración del sitio
     this.loadSettings();
+
+    // Escuchar cambios en el tamaño de la pantalla
+    window.addEventListener('resize', this.checkScreenSize.bind(this));
+  }
+
+  ngOnDestroy(): void {
+    window.removeEventListener('resize', this.checkScreenSize.bind(this));
   }
 
   toggleSidebar(): void {
@@ -50,6 +61,15 @@ export class AdminLayoutComponent implements OnInit {
     this.authService.logout().subscribe();
   }
 
+  private checkScreenSize(): void {
+    this.isMobile = window.innerWidth < this.mobileBreakpoint;
+    if (this.isMobile) {
+      this.isSidebarOpen = false; // Cierra el sidebar por defecto en móviles
+    } else {
+      this.isSidebarOpen = true; // Abre el sidebar en pantallas más grandes
+    }
+  }
+
   private loadSettings(): void {
     this.settingsService.getSettings().subscribe({
       next: (settings) => {
@@ -57,7 +77,7 @@ export class AdminLayoutComponent implements OnInit {
           this.siteTitle = settings.site_title;
         }
         if (settings.logo) {
-          this.logoUrl = 'http://localhost:8000/storage/' + settings.logo;
+          this.logoUrl = environment.storageUrl + settings.logo;
         }
       },
       error: (err) => {

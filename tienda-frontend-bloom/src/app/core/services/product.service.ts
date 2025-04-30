@@ -15,8 +15,19 @@ export interface Product {
   main_image: string;
   available: boolean;
   stock: number;
+  created_at: string; // Añadido
+  updated_at: string; // Añadido
   category?: any;
   images?: any[];
+}
+
+export interface ProductImage {
+  id: number;
+  product_id: number;
+  image_path: string;
+  order: number;
+  created_at?: string;
+  updated_at?: string;
 }
 
 @Injectable({
@@ -38,6 +49,11 @@ export class ProductService {
   // Obtener un producto por ID
   getProduct(id: number): Observable<Product> {
     return this.httpBase.get<Product>(`${this.apiUrl}/products/${id}`);
+  }
+
+  // Obtener productos por categoría
+  getProductsByCategory(categoryId: number): Observable<Product[]> {
+    return this.httpBase.get<Product[]>(`${this.apiUrl}/categories/${categoryId}/products`);
   }
 
   // Solo para administradores
@@ -87,6 +103,34 @@ export class ProductService {
     });
     
     return this.http.patch<any>(`${this.apiUrl}/products/${id}/toggle-availability`, {}, {
+      headers: headers,
+      withCredentials: true
+    });
+  }
+
+  // Obtener productos relacionados (puede ser por misma categoría o por etiquetas si las hay)
+  getRelatedProducts(productId: number, limit: number = 4): Observable<Product[]> {
+    return this.httpBase.get<Product[]>(`${this.apiUrl}/products/${productId}/related?limit=${limit}`);
+  }
+
+  // Buscar productos
+  searchProducts(query: string): Observable<Product[]> {
+    return this.httpBase.get<Product[]>(`${this.apiUrl}/products/search?q=${query}`);
+  }
+
+  // Obtener productos destacados
+  getFeaturedProducts(limit: number = 8): Observable<Product[]> {
+    return this.httpBase.get<Product[]>(`${this.apiUrl}/products/featured?limit=${limit}`);
+  }
+
+  // Eliminar una imagen adicional específica del producto
+  deleteProductImage(imageId: number): Observable<any> {
+    const headers = new HttpHeaders({
+      'X-XSRF-TOKEN': decodeURIComponent(this.getTokenFromCookie('XSRF-TOKEN') || ''),
+      'X-Requested-With': 'XMLHttpRequest'
+    });
+    
+    return this.http.delete<any>(`${this.apiUrl}/product-images/${imageId}`, {
       headers: headers,
       withCredentials: true
     });

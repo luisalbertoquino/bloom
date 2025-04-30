@@ -169,7 +169,7 @@ export class NavbarComponent implements OnInit, AfterViewInit, OnDestroy {
 
         if (settings.logo) {
           // Construir la URL completa de la imagen
-          this.logoUrl = 'http://localhost:8000/storage/' + settings.logo;
+          this.logoUrl = environment.storageUrl + settings.logo;
         }
       },
       error => {

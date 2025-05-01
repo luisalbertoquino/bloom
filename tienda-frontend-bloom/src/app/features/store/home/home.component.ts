@@ -11,7 +11,7 @@ import { ProductService, Product } from '../../../core/services/product.service'
 import { BlogService, BlogPost } from '../../../core/services/blog.service';
 import { SettingsService } from '../../../core/services/settings.service';
 import { CartService } from '../../../core/services/cart.service';
-import { environment } from '../../../../environments/enviroment';
+import { environment } from '../../../../environments/environment';
 import { ProductQuickViewComponent } from '../product-quick-view/product-quick-view.component';
 
 import { forkJoin, of } from 'rxjs';

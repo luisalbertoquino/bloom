@@ -4,8 +4,10 @@ import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { SettingsService } from '../../../core/services/settings.service';
 import { ThemeService } from '../../../core/services/theme.service';
-import { environment } from '../../../../environments/enviroment';
+import { environment } from '../../../../environments/environment';
 import { AuthService } from '../../../core/services/auth.service';
+import { catchError } from 'rxjs/operators';
+import { of } from 'rxjs';
 
 @Component({
   selector: 'app-settings',
@@ -32,6 +34,7 @@ export class SettingsComponent implements OnInit {
   bannerPreview: string | null = null;
   faviconPreview: string | null = null;
   storageUrl = environment.storageUrl;
+  autoRetrying = false;
   
   // Configuraciones actuales
   currentSettings: any = {};
@@ -75,6 +78,8 @@ export class SettingsComponent implements OnInit {
 
   loadSettings(): void {
     this.isLoading = true;
+    this.errorMessage = '';
+    
     this.settingsService.getSettings().subscribe({
       next: (settings) => {
         this.currentSettings = settings;
@@ -109,11 +114,28 @@ export class SettingsComponent implements OnInit {
         }
         
         this.isLoading = false;
+        this.autoRetrying = false;
       },
       error: (error) => {
         console.error('Error loading settings', error);
-        this.errorMessage = 'Error al cargar la configuración. Por favor, inténtalo de nuevo.';
         this.isLoading = false;
+        
+        if (error.status === 401) {
+          this.errorMessage = 'Tu sesión ha expirado. Serás redirigido a la página de inicio de sesión.';
+          this.handleSessionExpired();
+        } else {
+          this.errorMessage = 'Error al cargar la configuración. Inténtalo de nuevo más tarde.';
+          
+          // Reintento automático para errores de conexión
+          if ((error.status === 0 || error.status === 431 || error.status === 419) && !this.autoRetrying) {
+            this.autoRetrying = true;
+            this.errorMessage = 'Reestableciendo conexión...';
+            setTimeout(() => {
+              this.autoRetrying = false;
+              this.loadSettings();
+            }, 1000);
+          }
+        }
       }
     });
   }
@@ -223,6 +245,7 @@ export class SettingsComponent implements OnInit {
     this.isSubmitting = true;
     this.errorMessage = '';
     this.successMessage = '';
+    this.autoRetrying = false;
 
     const formData = new FormData();
     
@@ -244,8 +267,27 @@ export class SettingsComponent implements OnInit {
       formData.append('favicon', this.selectedFaviconFile);
     }
 
-    this.settingsService.updateSettings(formData).subscribe({
+    // Ya no necesitamos refrescar el token CSRF explícitamente
+    this.settingsService.updateSettings(formData).pipe(
+      catchError(error => {
+        console.error('Error updating settings', error);
+        
+        if ((error.status === 0 || error.status === 431 || error.status === 419) && !this.autoRetrying) {
+          this.autoRetrying = true;
+          this.errorMessage = 'Reestableciendo conexión...';
+          setTimeout(() => {
+            this.autoRetrying = false;
+            this.onSubmit(); // Reintentar la operación
+          }, 1000);
+          return of(null);
+        }
+        
+        return of(null);
+      })
+    ).subscribe({
       next: (response) => {
+        if (response === null) return; // Error ya manejado
+        
         this.isSubmitting = false;
         this.successMessage = 'Configuración actualizada correctamente.';
         
@@ -256,38 +298,55 @@ export class SettingsComponent implements OnInit {
         this.showUpdateConfirmation = true;
       },
       error: (error) => {
-        this.isSubmitting = false;
-        console.error('Error updating settings', error);
-        
-        // Verificar si es un error de autenticación
-        if (error.status === 401) {
-          this.errorMessage = 'Tu sesión ha expirado. Por favor, inicia sesión nuevamente.';
-          // Redirigir al login después de 2 segundos
-          setTimeout(() => {
-            this.authService.logout().subscribe({
-              next: () => {
-                // La redirección se maneja en el servicio AuthService
-              },
-              error: () => {
-                // Forzar redirección en caso de error
-                window.location.href = '/login';
-              }
-            });
-          }, 2000);
-        } else if (error.status === 419) {
-          // Error específico de CSRF token mismatch
-          this.errorMessage = 'Error de seguridad. Por favor, intenta de nuevo.';
-        } else if (error.error && error.error.message) {
-          this.errorMessage = error.error.message;
-        } else if (error.error && error.error.errors) {
-          this.errorMessage = Object.values(error.error.errors)[0] as string;
-        } else {
-          this.errorMessage = 'Error al guardar la configuración. Por favor, inténtalo de nuevo.';
-        }
-        
-        setTimeout(() => this.errorMessage = '', 5000);
+        this.handleError(error);
       }
     });
+  }
+
+  // Manejo de errores centralizado
+  private handleError(error: any): void {
+    this.isSubmitting = false;
+    console.error('Error submitting form', error);
+    
+    // Verificar si es un error de autenticación
+    if (error.status === 401) {
+      this.errorMessage = 'Tu sesión ha expirado. Serás redirigido a la página de inicio de sesión.';
+      this.handleSessionExpired();
+    } else if (error.status === 422) {
+      // Error de validación
+      if (error.error && error.error.errors) {
+        const firstError = Object.values(error.error.errors)[0];
+        this.errorMessage = Array.isArray(firstError) ? firstError[0] : String(firstError);
+      } else {
+        this.errorMessage = 'Error de validación. Por favor, revisa los datos ingresados.';
+      }
+    } else if ((error.status === 0 || error.status === 431 || error.status === 419) && !this.autoRetrying) {
+      // Errores de conexión o CSRF - reintentar automáticamente
+      this.autoRetrying = true;
+      this.errorMessage = 'Reestableciendo conexión...';
+      setTimeout(() => {
+        this.autoRetrying = false;
+        this.onSubmit(); // Reintentar la operación
+      }, 1000);
+    } else {
+      this.errorMessage = 'Error al guardar la configuración. Por favor, inténtalo de nuevo más tarde.';
+    }
+    
+    setTimeout(() => this.errorMessage = '', 5000);
+  }
+
+  private handleSessionExpired(): void {
+    setTimeout(() => {
+      this.authService.logout().subscribe({
+        next: () => {
+          // La redirección se maneja en el servicio AuthService
+        },
+        error: () => {
+          // Forzar redirección en caso de error
+          window.location.href = '/login';
+        }
+      });
+    }, 2000);
   }
 
   // Método para recargar la página cuando el usuario confirma

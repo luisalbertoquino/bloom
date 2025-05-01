@@ -7,13 +7,25 @@ use App\Models\BlogPost;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Config;
 
 class BlogPostController extends Controller
 {
+    public function __construct()
+    {
+        // Desactivar cookies de sesión para métodos GET
+        $this->middleware(function ($request, $next) {
+            if ($request->isMethod('get')) {
+                Config::set('session.driver', 'array');
+            }
+            return $next($request);
+        });
+    }
+
     public function index()
     {
         $posts = BlogPost::all();
-        return response()->json($posts);
+        return response()->json($posts)->withoutCookie(cookie('laravel_session'));
     }
 
     public function store(Request $request)
@@ -43,7 +55,7 @@ class BlogPostController extends Controller
 
     public function show(BlogPost $blogPost)
     {
-        return response()->json($blogPost);
+        return response()->json($blogPost)->withoutCookie(cookie('laravel_session'));
     }
 
     public function update(Request $request, BlogPost $blogPost)
@@ -89,6 +101,6 @@ class BlogPostController extends Controller
     public function featured()
     {
         $featuredPosts = BlogPost::where('featured', true)->take(3)->get();
-        return response()->json($featuredPosts);
+        return response()->json($featuredPosts)->withoutCookie(cookie('laravel_session'));
     }
 }

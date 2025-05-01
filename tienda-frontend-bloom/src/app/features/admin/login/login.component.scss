@@ -293,3 +293,35 @@
     }
   }
 }
+
+
+.reload-button-container {
+  margin-top: 10px;
+}
+
+.btn-primary {
+  background-color: #4f46e5;
+  border-color: #4338ca;
+  color: white;
+  font-weight: 500;
+  font-size: 0.875rem;
+  padding: 0.25rem 0.75rem;
+  border-radius: 0.25rem;
+  transition: all 0.2s;
+}
+
+.btn-primary:hover {
+  background-color: #4338ca;
+  border-color: #3730a3;
+}
+
+.btn-primary:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.5);
+}
+
+.btn-sm {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
+  line-height: 1.5;
+}

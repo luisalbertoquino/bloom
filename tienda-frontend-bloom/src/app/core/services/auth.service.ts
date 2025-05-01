@@ -2,19 +2,18 @@
 import { Injectable, PLATFORM_ID, Inject } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { BehaviorSubject, Observable, throwError, of } from 'rxjs';
-import { catchError, tap, switchMap, finalize } from 'rxjs/operators';
+import { catchError, tap, switchMap, finalize, delay } from 'rxjs/operators';
 import { Router } from '@angular/router';
 import { isPlatformBrowser } from '@angular/common';
-import { environment } from '../../../environments/enviroment';
+import { environment } from '../../../environments/environment';
 import { HttpBaseService } from './http-base.service';
+import { CookieManagerService } from './cookie-manager.service';
 
 export interface User {
   id: number;
   name: string;
   email: string;
   email_verified_at?: string;
-  created_at?: string;
-  updated_at?: string;
 }
 
 export interface AuthResponse {
@@ -32,228 +31,275 @@ export class AuthService {
   private apiUrl = environment.apiUrl;
   private csrfTokenInitialized = false;
   private isBrowser: boolean;
+  private tokenRefreshInProgress = false;
 
   constructor(
     private http: HttpClient,
     private httpBase: HttpBaseService,
     private router: Router,
+    private cookieManager: CookieManagerService,
     @Inject(PLATFORM_ID) private platformId: any
   ) {
     this.isBrowser = isPlatformBrowser(this.platformId);
-    
-    // Inicializar el BehaviorSubject con el usuario almacenado en localStorage
     this.currentUserSubject = new BehaviorSubject<User | null>(this.getUserFromStorage());
     this.currentUser = this.currentUserSubject.asObservable();
   }
 
-  // Devuelve el valor actual del usuario sin suscribirse al observable
   public get currentUserValue(): User | null {
     return this.currentUserSubject.value;
   }
 
-  // Devuelve el token actual desde localStorage
   public get token(): string | null {
-    if (this.isBrowser && window.localStorage) {
-      return localStorage.getItem('access_token');
-    }
-    return null;
+    return this.isBrowser ? localStorage.getItem('access_token') : null;
   }
 
-  // Devuelve true si el usuario está autenticado
   public get isAuthenticated(): boolean {
     return !!this.token && !!this.currentUserValue;
   }
 
-  // Recupera el usuario almacenado en localStorage
   private getUserFromStorage(): User | null {
-    if (this.isBrowser && window.localStorage) {
+    if (this.isBrowser) {
       const user = localStorage.getItem('user');
       return user ? JSON.parse(user) : null;
     }
     return null;
   }
 
-  // Inicializa el token CSRF llamando al endpoint específico
-  initCsrfToken(): Observable<any> {
-    if (this.csrfTokenInitialized) {
-      return of(true); // Ya se inicializó, no hacer nada
+  // Función para obtener correctamente el token CSRF
+  private getXsrfTokenFromCookie(): string | null {
+    if (typeof document === 'undefined') return null;
+    
+    try {
+      const cookies = document.cookie.split(';');
+      for (const cookie of cookies) {
+        const parts = cookie.trim().split('=');
+        if (parts.length > 1 && parts[0] === 'XSRF-TOKEN') {
+          // Importante: Decodificar correctamente el valor de la cookie
+          return decodeURIComponent(parts[1]);
+        }
+      }
+    } catch (e) {
+      console.error('Error al extraer token CSRF:', e);
     }
     
-    console.log('Inicializando token CSRF...');
+    return null;
+  }
+
+  // Método revisado para inicializar el token CSRF
+  initCsrfToken(): Observable<any> {
+    if (this.csrfTokenInitialized && !this.tokenRefreshInProgress) {
+      console.log('Token CSRF ya inicializado, omitiendo solicitud');
+      return of(true);
+    }
+    
+    this.tokenRefreshInProgress = true;
+    console.log('Solicitando CSRF token a:', `${environment.baseUrl}/sanctum/csrf-cookie`);
+    
+    // Primero, forzar limpieza del estado de CSRF
+    this.csrfTokenInitialized = false;
+    
     return this.http.get(`${environment.baseUrl}/sanctum/csrf-cookie`, {
-      withCredentials: true
+      withCredentials: true,
+      headers: new HttpHeaders({
+        'X-Requested-With': 'XMLHttpRequest',
+        'Accept': 'application/json'
+      })
     }).pipe(
-      tap(response => {
-        console.log('Token CSRF inicializado correctamente');
-        if (this.isBrowser) {
-          console.log('Cookies después de inicializar CSRF:', document.cookie);
-        }
+      // Delay crítico para asegurar que la cookie se procese correctamente
+      delay(300),
+      tap(() => {
+        this.tokenRefreshInProgress = false;
         this.csrfTokenInitialized = true;
+        
+        if (this.isBrowser) {
+          const token = this.getXsrfTokenFromCookie();
+          console.log('CSRF token después de inicializar:', token ? 'Obtenido' : 'No disponible');
+          
+          // Guardar directamente en localStorage para reutilizar
+          if (token) {
+            localStorage.setItem('XSRF_TOKEN', token);
+          }
+        }
       }),
       catchError(error => {
+        this.tokenRefreshInProgress = false;
+        this.csrfTokenInitialized = false;
         console.error('Error al inicializar token CSRF:', error);
-        return throwError(() => error);
+        return of(false);
       })
     );
   }
 
-  // Refresca el token CSRF
   refreshCsrfToken(): Observable<any> {
     this.csrfTokenInitialized = false;
     return this.initCsrfToken();
   }
 
-  // Método para obtener el token CSRF de las cookies
-  private getXsrfToken(): string | null {
-    if (!this.isBrowser) {
-      return null;
-    }
-    
-    const cookies = document.cookie.split(';');
-    for (const cookie of cookies) {
-      const [name, value] = cookie.trim().split('=');
-      if (name === 'XSRF-TOKEN') {
-        return decodeURIComponent(value);
-      }
-    }
-    return null;
-  }
-
-  // Inicia sesión con manejo explícito del token CSRF
+  // Método revisado para login - sin reintentos automáticos
   login(email: string, password: string): Observable<AuthResponse> {
-    console.log('Iniciando proceso de login...');
+    console.log('Iniciando proceso de login para:', email);
     
     return this.initCsrfToken().pipe(
       switchMap(() => {
-        // Obtenemos el token CSRF manualmente de las cookies
-        const token = this.getXsrfToken();
-        console.log('Token CSRF para login:', token);
+        // Obtener token DIRECTAMENTE de las cookies (no del localStorage)
+        const token = this.getXsrfTokenFromCookie();
+        console.log('Token CSRF para login:', token ? token.substring(0, 10) + '...' : 'No disponible');
         
-        // Configuramos los headers manualmente para asegurarnos de que el token se envía correctamente
+        if (!token) {
+          return throwError(() => ({
+            status: 419,
+            message: 'No se pudo obtener token de seguridad. Por favor, recarga la página.'
+          }));
+        }
+        
         const headers = new HttpHeaders({
           'Content-Type': 'application/json',
+          'Accept': 'application/json',
           'X-Requested-With': 'XMLHttpRequest',
-          ...(token ? { 'X-XSRF-TOKEN': token } : {})
+          'X-XSRF-TOKEN': token  // Usar el token directamente de la cookie
         });
-        
-        if (this.isBrowser) {
-          console.log('Cookies antes de login:', document.cookie);
-        }
         
         return this.http.post<AuthResponse>(
           `${this.apiUrl}/login`, 
           { email, password },
-          { 
-            headers: headers,
-            withCredentials: true 
-          }
-        ).pipe(
-          tap(response => {
-            console.log('Login exitoso, guardando datos...');
-            
-            // Almacenar token y datos
-            if (this.isBrowser && window.localStorage) {
-              localStorage.setItem('access_token', response.access_token);
-              localStorage.setItem('user', JSON.stringify(response.user));
-            }
-            this.currentUserSubject.next(response.user);
-            this.router.navigate(['/admin']);
-          }),
-          finalize(() => {
-            // Log para verificar las cookies después de login
-            if (this.isBrowser) {
-              console.log('Cookies después de login:', document.cookie);
-            }
-          }),
-          catchError(error => {
-            console.error('Error en login:', error);
-            return throwError(() => error);
-          })
-        );
-      })
-    );
-  }
-
-  // Cierra sesión
-  logout(): Observable<any> {
-    // Refrescar token CSRF antes de cerrar sesión
-    return this.refreshCsrfToken().pipe(
-      switchMap(() => {
-        // Obtener el token CSRF actualizado
-        const token = this.getXsrfToken();
-        
-        // Crear headers con el token
-        const headers = new HttpHeaders({
-          'Content-Type': 'application/json',
-          'X-Requested-With': 'XMLHttpRequest',
-          ...(token ? { 'X-XSRF-TOKEN': token } : {})
-        });
-        
-        return this.http.post<any>(
-          `${this.apiUrl}/logout`, 
-          {},
-          { 
-            headers: headers,
-            withCredentials: true 
-          }
-        ).pipe(
-          tap(() => {
-            console.log('Logout exitoso');
-            this.clearAuthData();
-          })
+          { headers, withCredentials: true }
         );
       }),
+      tap(response => {
+        console.log('Login exitoso');
+        
+        // Guardar token y datos del usuario
+        if (this.isBrowser) {
+          localStorage.setItem('access_token', response.access_token);
+          localStorage.setItem('user', JSON.stringify({
+            id: response.user.id,
+            name: response.user.name,
+            email: response.user.email
+          }));
+        }
+        
+        // Actualizar el BehaviorSubject con el usuario actual
+        this.currentUserSubject.next(response.user);
+        
+        // Redirigir al usuario después del login
+        this.router.navigate(['/admin']);
+      }),
       catchError(error => {
-        console.error('Error en logout:', error);
-        // Incluso si hay error, limpiamos los datos localmente
-        this.clearAuthData();
-        return throwError(() => error);
+        console.error('Error en login:', error);
+        
+        // Limpiar estado de token para permitir obtener uno nuevo
+        if (error.status === 419) {
+          this.csrfTokenInitialized = false;
+          console.log('Error de CSRF token.');
+        }
+        
+        // NO reintentar automáticamente - devolver el error al componente
+        if (error.error && error.error.message) {
+          return throwError(() => ({
+            status: error.status,
+            message: error.error.message
+          }));
+        }
+        
+        // Mensajes de error personalizados según status
+        const errorMessages: {[key: number]: string} = {
+          401: 'Credenciales incorrectas. Por favor, verifica tu email y contraseña.',
+          419: 'Error de seguridad. Por favor, recarga la página e intenta nuevamente.',
+          431: 'Error de conexión. Por favor, recarga la página e intenta nuevamente.',
+          0: 'No se pudo conectar con el servidor. Verifica tu conexión a internet.'
+        };
+        
+        // Usar operador de acceso seguro con valor predeterminado
+        const message = (error.status in errorMessages) 
+          ? errorMessages[error.status] 
+          : 'Error al conectar con el servidor. Inténtalo de nuevo más tarde.';
+        
+        return throwError(() => ({
+          status: error.status,
+          message: message
+        }));
       })
     );
   }
 
-  // Limpia los datos de autenticación
+  logout(): Observable<any> {
+    // Obtener token DIRECTAMENTE de las cookies
+    const token = this.getXsrfTokenFromCookie();
+    
+    const headers = new HttpHeaders({
+      'X-Requested-With': 'XMLHttpRequest',
+      'Accept': 'application/json',
+      ...(token ? { 'X-XSRF-TOKEN': token } : {})
+    });
+    
+    return this.http.post<any>(
+      `${this.apiUrl}/logout`, 
+      {},
+      { headers, withCredentials: true }
+    ).pipe(
+      tap(() => this.clearAuthData()),
+      catchError(error => {
+        this.clearAuthData();
+        return of(null);
+      })
+    );
+  }
+
   public clearAuthData(): void {
-    console.log('Limpiando datos de autenticación');
-    if (this.isBrowser && window.localStorage) {
+    if (this.isBrowser) {
       localStorage.removeItem('access_token');
       localStorage.removeItem('user');
+      localStorage.removeItem('XSRF_TOKEN');
+      // Usar el servicio de gestión de cookies para limpiar cookies
+      this.cookieManager.cleanAllCookies();
     }
     this.csrfTokenInitialized = false;
     this.currentUserSubject.next(null);
     this.router.navigate(['/login']);
   }
 
-  // Obtiene los datos del usuario actual desde el backend
   getCurrentUser(): Observable<User> {
-    // Obtener el token CSRF
-    const token = this.getXsrfToken();
+    if (!this.isAuthenticated) {
+      return throwError(() => new Error('No autenticado'));
+    }
     
-    // Crear headers con el token
+    // Obtener token DIRECTAMENTE de las cookies
+    const token = this.getXsrfTokenFromCookie();
+    
     const headers = new HttpHeaders({
-      'Content-Type': 'application/json',
       'X-Requested-With': 'XMLHttpRequest',
+      'Accept': 'application/json',
       ...(token ? { 'X-XSRF-TOKEN': token } : {})
     });
     
     return this.http.get<User>(
       `${this.apiUrl}/user`,
-      { 
-        headers: headers,
-        withCredentials: true 
-      }
+      { headers, withCredentials: true }
     ).pipe(
       tap(user => {
-        console.log('Usuario actual obtenido');
-        if (this.isBrowser && window.localStorage) {
-          localStorage.setItem('user', JSON.stringify(user));
+        if (this.isBrowser) {
+          // Almacenar solo datos esenciales
+          const essentialUserData = {
+            id: user.id,
+            name: user.name,
+            email: user.email
+          };
+          localStorage.setItem('user', JSON.stringify(essentialUserData));
         }
         this.currentUserSubject.next(user);
       }),
       catchError(error => {
-        console.error('Error al obtener usuario actual:', error);
         if (error.status === 401) {
           this.clearAuthData();
+        } else if (error.status === 431) {
+          // Error específico de encabezados demasiado grandes
+          console.error('Error 431: Headers demasiado grandes - Limpiando cookies');
+          this.cookieManager.cleanNonEssentialCookies(); // Cambio a cleanNonEssentialCookies
+          // NO reintentar automáticamente
+          return throwError(() => ({
+            status: error.status,
+            message: 'Error de conexión. Por favor, recarga la página e intenta nuevamente.'
+          }));
         }
         return throwError(() => error);
       })
@@ -261,7 +307,6 @@ export class AuthService {
   }
 
   public handleAuthError(): void {
-    console.log('Manejando error de autenticación desde AuthService');
     this.clearAuthData();
   }
 }

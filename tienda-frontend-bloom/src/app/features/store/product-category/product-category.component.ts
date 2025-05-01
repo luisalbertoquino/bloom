@@ -8,7 +8,7 @@ import { ProductCardComponent } from '../../../shared/components/product-card/pr
 import { CategoryService, Category } from '../../../core/services/category.service';
 import { ProductService, Product } from '../../../core/services/product.service';
 import { CartService } from '../../../core/services/cart.service';
-import { environment } from '../../../../environments/enviroment';
+import { environment } from '../../../../environments/environment';
 import { ProductQuickViewComponent } from '../product-quick-view/product-quick-view.component';
 
 import { Router } from '@angular/router';

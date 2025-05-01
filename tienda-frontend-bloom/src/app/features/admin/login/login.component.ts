@@ -3,9 +3,8 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
-import { AuthService } from '../../../core/services/auth.service';
-import { SettingsService } from '../../../core/services/settings.service';
-import { environment } from '../../../../environments/enviroment';
+import { AuthService, SettingsService, CookieManagerService } from '../../../core/services';
+import { environment } from '../../../../environments/environment';
 import { Subscription } from 'rxjs';
 
 @Component({
@@ -23,6 +22,8 @@ export class LoginComponent implements OnInit, OnDestroy {
   loginForm!: FormGroup;
   isSubmitting = false;
   errorMessage = '';
+  showError = false;
+  showReloadButton = false; // Agregar para mostrar botón de recarga
   logoUrl: string | null = null;
   
   // Información de contacto fija
@@ -36,6 +37,7 @@ export class LoginComponent implements OnInit, OnDestroy {
     private fb: FormBuilder,
     private authService: AuthService,
     private settingsService: SettingsService,
+    private cookieManager: CookieManagerService,
     private router: Router
   ) { }
 
@@ -52,6 +54,7 @@ export class LoginComponent implements OnInit, OnDestroy {
       return;
     }
     
+  
     // Cargar solo el logo desde las configuraciones
     this.loadLogo();
     
@@ -59,10 +62,21 @@ export class LoginComponent implements OnInit, OnDestroy {
     const formChanges = this.loginForm.valueChanges.subscribe(() => {
       if (this.errorMessage) {
         this.errorMessage = '';
+        this.showError = false;
+        this.showReloadButton = false;
       }
     });
     
     this.subscriptions.push(formChanges);
+  }
+  
+
+  
+  // Método para recargar la página
+  reloadPage(): void {
+    if (typeof window !== 'undefined') {
+      window.location.reload();
+    }
   }
   
   ngOnDestroy(): void {
@@ -101,7 +115,7 @@ export class LoginComponent implements OnInit, OnDestroy {
         }
       },
       error: error => {
-        console.error('Error loading logo', error);
+        // No mostrar el error en consola para no asustar al usuario
       }
     });
     
@@ -115,23 +129,50 @@ export class LoginComponent implements OnInit, OnDestroy {
       this.loginForm.markAllAsTouched();
       return;
     }
-
+  
     this.isSubmitting = true;
     this.errorMessage = '';
-
+    this.showError = false;
+    this.showReloadButton = false;
+  
+    // NO limpiar cookies antes del login - esto puede eliminar el token CSRF
+  
     const { email, password } = this.loginForm.value;
-
+  
     const loginSub = this.authService.login(email, password).subscribe({
       next: () => {
         // La redirección se maneja ahora en el AuthService
-        console.log('Login exitoso');
       },
       error: (error) => {
         this.isSubmitting = false;
         
-        if (error.error && error.error.message) {
+        if (error.status === 401) {
+          // Error de credenciales incorrectas (401 Unauthorized)
+          this.errorMessage = 'Credenciales incorrectas';
+          this.showError = true;
+        } else if (error.status === 431 || error.status === 419) {
+          // Errores de CSRF o headers demasiado grandes
+          const errorText = error.status === 431 
+            ? 'Error de conexión.' 
+            : 'Error de seguridad.';
+          
+          this.errorMessage = `${errorText} Es necesario recargar la página.`;
+          this.showError = true;
+          this.showReloadButton = true; // Mostrar botón de recarga
+        } else if (error.message) {
+          // Error con mensaje definido (del AuthService)
+          this.errorMessage = error.message;
+          this.showError = true;
+          
+          // Si el mensaje menciona recargar, mostrar botón
+          if (error.message.toLowerCase().includes('recarga')) {
+            this.showReloadButton = true;
+          }
+        } else if (error.error && error.error.message) {
           this.errorMessage = error.error.message;
+          this.showError = true;
         } else if (error.error && error.error.errors) {
+          // Errores de validación del backend
           if (error.error.errors.email) {
             this.errorMessage = error.error.errors.email[0];
           } else if (error.error.errors.password) {
@@ -139,11 +180,17 @@ export class LoginComponent implements OnInit, OnDestroy {
           } else {
             this.errorMessage = 'Error de validación. Por favor, verifica tus datos.';
           }
+          this.showError = true;
         } else {
+          // Error genérico
           this.errorMessage = 'Error al iniciar sesión. Por favor, intenta de nuevo.';
+          this.showError = true;
         }
         
-        console.error('Error de login:', error);
+        // No imprimir errores normales como 401 en la consola
+        if (error.status !== 401) {
+          console.error('Error de login inesperado:', error);
+        }
       }
     });
     

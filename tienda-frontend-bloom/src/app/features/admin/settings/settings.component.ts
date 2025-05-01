@@ -6,8 +6,6 @@ import { SettingsService } from '../../../core/services/settings.service';
 import { ThemeService } from '../../../core/services/theme.service';
 import { environment } from '../../../../environments/environment';
 import { AuthService } from '../../../core/services/auth.service';
-import { catchError } from 'rxjs/operators';
-import { of } from 'rxjs';
 
 @Component({
   selector: 'app-settings',
@@ -34,7 +32,6 @@ export class SettingsComponent implements OnInit {
   bannerPreview: string | null = null;
   faviconPreview: string | null = null;
   storageUrl = environment.storageUrl;
-  autoRetrying = false;
   
   // Configuraciones actuales
   currentSettings: any = {};
@@ -114,7 +111,6 @@ export class SettingsComponent implements OnInit {
         }
         
         this.isLoading = false;
-        this.autoRetrying = false;
       },
       error: (error) => {
         console.error('Error loading settings', error);
@@ -125,16 +121,6 @@ export class SettingsComponent implements OnInit {
           this.handleSessionExpired();
         } else {
           this.errorMessage = 'Error al cargar la configuración. Inténtalo de nuevo más tarde.';
-          
-          // Reintento automático para errores de conexión
-          if ((error.status === 0 || error.status === 431 || error.status === 419) && !this.autoRetrying) {
-            this.autoRetrying = true;
-            this.errorMessage = 'Reestableciendo conexión...';
-            setTimeout(() => {
-              this.autoRetrying = false;
-              this.loadSettings();
-            }, 1000);
-          }
         }
       }
     });
@@ -245,7 +231,6 @@ export class SettingsComponent implements OnInit {
     this.isSubmitting = true;
     this.errorMessage = '';
     this.successMessage = '';
-    this.autoRetrying = false;
 
     const formData = new FormData();
     
@@ -267,34 +252,16 @@ export class SettingsComponent implements OnInit {
       formData.append('favicon', this.selectedFaviconFile);
     }
 
-    // Ya no necesitamos refrescar el token CSRF explícitamente
-    this.settingsService.updateSettings(formData).pipe(
-      catchError(error => {
-        console.error('Error updating settings', error);
-        
-        if ((error.status === 0 || error.status === 431 || error.status === 419) && !this.autoRetrying) {
-          this.autoRetrying = true;
-          this.errorMessage = 'Reestableciendo conexión...';
-          setTimeout(() => {
-            this.autoRetrying = false;
-            this.onSubmit(); // Reintentar la operación
-          }, 1000);
-          return of(null);
-        }
-        
-        return of(null);
-      })
-    ).subscribe({
+    // Usar el patrón simple como en el componente de categorías
+    this.settingsService.updateSettings(formData).subscribe({
       next: (response) => {
-        if (response === null) return; // Error ya manejado
-        
         this.isSubmitting = false;
         this.successMessage = 'Configuración actualizada correctamente.';
         
         // Actualizar el tema
         this.themeService.initializeTheme();
         
-        // Mostrar mensaje de confirmación en lugar de recargar automáticamente
+        // Mostrar mensaje de confirmación
         this.showUpdateConfirmation = true;
       },
       error: (error) => {
@@ -320,14 +287,9 @@ export class SettingsComponent implements OnInit {
       } else {
         this.errorMessage = 'Error de validación. Por favor, revisa los datos ingresados.';
       }
-    } else if ((error.status === 0 || error.status === 431 || error.status === 419) && !this.autoRetrying) {
-      // Errores de conexión o CSRF - reintentar automáticamente
-      this.autoRetrying = true;
-      this.errorMessage = 'Reestableciendo conexión...';
-      setTimeout(() => {
-        this.autoRetrying = false;
-        this.onSubmit(); // Reintentar la operación
-      }, 1000);
+    } else if (error.status === 419) {
+      // Error específico de CSRF token mismatch
+      this.errorMessage = 'Error de seguridad. Por favor, intenta de nuevo.';
     } else {
       this.errorMessage = 'Error al guardar la configuración. Por favor, inténtalo de nuevo más tarde.';
     }
@@ -366,6 +328,9 @@ export class SettingsComponent implements OnInit {
     this.selectedLogoFile = null;
     this.selectedBannerFile = null;
     this.selectedFaviconFile = null;
+    this.logoError = null;
+    this.bannerError = null;
+    this.faviconError = null,
     this.logoError = null;
     this.bannerError = null;
     this.faviconError = null;

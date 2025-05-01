@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpContext, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { environment } from '../../../environments/enviroment';
+import { environment } from '../../../environments/environment';
 
 // Definir una interfaz para las opciones HTTP
 interface HttpOptions {

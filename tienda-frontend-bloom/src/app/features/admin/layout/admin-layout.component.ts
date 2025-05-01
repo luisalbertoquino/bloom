@@ -4,7 +4,7 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { AuthService, User } from '../../../core/services/auth.service';
 import { SettingsService } from '../../../core/services/settings.service';
-import { environment } from '../../../../environments/enviroment';
+import { environment } from '../../../../environments/environment';
 
 @Component({
   selector: 'app-admin-layout',

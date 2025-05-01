@@ -6,7 +6,7 @@ import { ProductService, Product } from '../../../core/services/product.service'
 import { CategoryService, Category } from '../../../core/services/category.service';
 import { BlogService, BlogPost } from '../../../core/services/blog.service';
 import { AuthService, User } from '../../../core/services/auth.service';
-import { environment } from '../../../../environments/enviroment';
+import { environment } from '../../../../environments/environment';
 
 @Component({
   selector: 'app-dashboard',

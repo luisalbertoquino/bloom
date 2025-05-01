@@ -2,7 +2,7 @@
 import { Component, OnInit, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { CartService, CartItem } from '../../../core/services/cart.service';
-import { environment } from '../../../../environments/enviroment';
+import { environment } from '../../../../environments/environment';
 
 @Component({
   selector: 'app-cart-popup',

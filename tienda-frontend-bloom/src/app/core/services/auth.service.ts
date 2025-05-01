@@ -5,7 +5,7 @@ import { BehaviorSubject, Observable, throwError, of } from 'rxjs';
 import { catchError, tap, switchMap, finalize } from 'rxjs/operators';
 import { Router } from '@angular/router';
 import { isPlatformBrowser } from '@angular/common';
-import { environment } from '../../../environments/enviroment';
+import { environment } from '../../../environments/environment';
 import { HttpBaseService } from './http-base.service';
 
 export interface User {

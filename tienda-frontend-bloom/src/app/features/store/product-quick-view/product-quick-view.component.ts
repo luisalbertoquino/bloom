@@ -5,7 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { RouterModule, Router } from '@angular/router';
 import { Product } from '../../../core/services/product.service';
 import { CartService } from '../../../core/services/cart.service';
-import { environment } from '../../../../enviroments/enviroment';
+import { environment } from '../../../../environments/enviroment';
 
 @Component({
   selector: 'app-product-quick-view',

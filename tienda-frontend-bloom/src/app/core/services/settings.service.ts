@@ -4,7 +4,7 @@ import { Observable, of } from 'rxjs';
 import { tap, catchError, retry, switchMap } from 'rxjs/operators';
 import { HttpBaseService } from './http-base.service';
 import { CacheService } from './cache.service';
-import { environment } from '../../../enviroments/enviroment';
+import { environment } from '../../../environments/enviroment';
 import { isPlatformBrowser } from '@angular/common';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { AuthService } from './auth.service';

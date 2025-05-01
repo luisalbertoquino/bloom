@@ -8,7 +8,7 @@ import { FooterComponent } from '../../../shared/components/footer/footer.compon
 import { ProductCardComponent } from '../../../shared/components/product-card/product-card.component';
 import { ProductService, Product } from '../../../core/services/product.service';
 import { CartService } from '../../../core/services/cart.service';
-import { environment } from '../../../../enviroments/enviroment';
+import { environment } from '../../../../environments/enviroment';
 import { ProductQuickViewComponent } from '../product-quick-view/product-quick-view.component';
 
 import { Router, ActivatedRoute } from '@angular/router';

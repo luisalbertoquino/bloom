@@ -5,7 +5,7 @@ import { RouterModule, ActivatedRoute, Router } from '@angular/router';
 import { NavbarComponent } from '../../../shared/components/navbar/navbar.component';
 import { FooterComponent } from '../../../shared/components/footer/footer.component';
 import { BlogService, BlogPost } from '../../../core/services/blog.service';
-import { environment } from '../../../../enviroments/enviroment';
+import { environment } from '../../../../environments/enviroment';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 
 @Component({

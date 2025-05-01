@@ -2,7 +2,7 @@
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { HttpBaseService } from './http-base.service';
-import { environment } from '../../../enviroments/enviroment';
+import { environment } from '../../../environments/enviroment';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 
 export interface Product {

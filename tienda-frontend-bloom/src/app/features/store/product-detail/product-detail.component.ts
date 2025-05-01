@@ -6,7 +6,7 @@ import { NavbarComponent } from '../../../shared/components/navbar/navbar.compon
 import { FooterComponent } from '../../../shared/components/footer/footer.component';
 import { ProductService, Product } from '../../../core/services/product.service';
 import { CartService } from '../../../core/services/cart.service';
-import { environment } from '../../../../enviroments/enviroment';
+import { environment } from '../../../../environments/enviroment';
 
 
 @Component({

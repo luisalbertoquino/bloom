@@ -5,7 +5,7 @@ import { RouterModule } from '@angular/router';
 import { NavbarComponent } from '../../../shared/components/navbar/navbar.component';
 import { FooterComponent } from '../../../shared/components/footer/footer.component';
 import { BlogService, BlogPost } from '../../../core/services/blog.service';
-import { environment } from '../../../../enviroments/enviroment';
+import { environment } from '../../../../environments/enviroment';
 
 @Component({
   selector: 'app-blog-list',

@@ -4,7 +4,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { BlogService, BlogPost } from '../../../core/services/blog.service';
 import { AuthService } from '../../../core/services/auth.service';
-import { environment } from '../../../../enviroments/enviroment';
+import { environment } from '../../../../environments/enviroment';
 import { switchMap } from 'rxjs/operators';
 import { of } from 'rxjs';
 

@@ -7,7 +7,7 @@ import { CartService } from '../../../core/services/cart.service';
 import { SettingsService } from '../../../core/services/settings.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { CartPopupComponent } from '../../../features/store/cart-popup/cart-popup.component';
-import { environment } from '../../../../enviroments/enviroment';
+import { environment } from '../../../../environments/enviroment';
 
 @Component({
   selector: 'app-navbar',

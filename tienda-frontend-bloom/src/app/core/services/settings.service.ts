@@ -1,13 +1,13 @@
 // src/app/core/services/settings.service.ts
 import { Injectable, Inject, PLATFORM_ID } from '@angular/core';
-import { Observable, of } from 'rxjs';
-import { tap, catchError, retry, switchMap } from 'rxjs/operators';
+import { Observable, of, throwError } from 'rxjs';
+import { tap, catchError, retry, delay } from 'rxjs/operators';
 import { HttpBaseService } from './http-base.service';
 import { CacheService } from './cache.service';
 import { environment } from '../../../environments/environment';
 import { isPlatformBrowser } from '@angular/common';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { AuthService } from './auth.service';
+import { HttpClient } from '@angular/common/http';
+import { CookieManagerService } from './cookie-manager.service';
 
 @Injectable({
   providedIn: 'root'
@@ -27,7 +27,7 @@ export class SettingsService {
     private httpBase: HttpBaseService,
     private http: HttpClient,
     private cacheService: CacheService,
-    private authService: AuthService,
+    private cookieManager: CookieManagerService,
     @Inject(PLATFORM_ID) private platformId: Object
   ) {
     this.isBrowser = isPlatformBrowser(this.platformId);
@@ -49,15 +49,24 @@ export class SettingsService {
     this.isLoading = true;
     
     return this.httpBase.get<any>(`${this.apiUrl}/settings`).pipe(
-      // Intenta la solicitud hasta 2 veces antes de fallar
-      retry(1),
       tap(settings => {
         this.cacheService.set('settings', settings, 5 * 60 * 1000);
         this.isLoading = false;
       }),
-      catchError(error => {
+      catchError((error) => {
         console.error('Error al cargar configuraciones:', error);
         this.isLoading = false;
+        
+        if (error.status === 0 || error.status === 431 || error.status === 419) {
+          // Limpiar cookies antes de reintentar
+          this.cookieManager.cleanRouteCookies();
+          console.log('Reintentando obtener configuraciones después de limpiar cookies...');
+          return of(this.fallbackSettings).pipe(
+            delay(800),
+            retry(1)
+          );
+        }
+        
         // Guardar la configuración predeterminada en caché para evitar futuras solicitudes fallidas
         this.cacheService.set('settings', this.fallbackSettings, 30 * 1000); // Caché temporal de 30 segundos
         return of(this.fallbackSettings);
@@ -68,7 +77,6 @@ export class SettingsService {
   // Obtener una configuración específica (no usa caché)
   getSetting(key: string): Observable<any> {
     return this.httpBase.get<any>(`${this.apiUrl}/settings/${key}`).pipe(
-      retry(1),
       catchError(error => {
         console.error(`Error al cargar configuración ${key}:`, error);
         return of(null);
@@ -77,29 +85,24 @@ export class SettingsService {
   }
 
   // Solo para administradores (actualiza configuración y limpia caché)
-  updateSettings(settingsData: FormData): Observable<any> {
-    return this.authService.refreshCsrfToken().pipe(
-      switchMap(() => {
-        const token = this.getTokenFromCookie('XSRF-TOKEN');
-        
-        const headers = new HttpHeaders({
-          'X-XSRF-TOKEN': decodeURIComponent(token || ''),
-          'X-Requested-With': 'XMLHttpRequest'
-        });
-        
-        return this.http.post<any>(`${this.apiUrl}/settings`, settingsData, {
-          headers: headers,
-          withCredentials: true
-        }).pipe(
-          tap(() => {
-            // Limpiar caché después de actualizar
-            this.cacheService.clear('settings');
-          })
-        );
+  // IMPORTANTE: Usamos el mismo patrón que en CategoryService
+  updateSettings(formData: FormData): Observable<any> {
+    // Usar httpBase directamente, como en CategoryService
+    return this.httpBase.post<any>(`${this.apiUrl}/settings`, formData).pipe(
+      tap(() => {
+        // Limpiar caché después de actualizar
+        this.cacheService.clear('settings');
       }),
       catchError(error => {
         console.error('Error al actualizar configuraciones:', error);
-        throw error; // Re-lanzar el error para que el componente pueda manejarlo
+        
+        if (error.status === 0 || error.status === 431 || error.status === 419) {
+          // Limpiar cookies antes de reintentar
+          this.cookieManager.cleanRouteCookies(3); // Limpieza agresiva
+          console.log('Error de sesión. Limpiando cookies y lanzando error...');
+        }
+        
+        return throwError(() => error);
       })
     );
   }
@@ -118,18 +121,5 @@ export class SettingsService {
     } catch (error) {
       console.error('Error al configurar el favicon:', error);
     }
-  }
-
-  private getTokenFromCookie(name: string): string | null {
-    if (!this.isBrowser) return null;
-    
-    const cookies = document.cookie.split(';');
-    for (const cookie of cookies) {
-      const [cookieName, cookieValue] = cookie.trim().split('=');
-      if (cookieName === name) {
-        return cookieValue;
-      }
-    }
-    return null;
   }
 }

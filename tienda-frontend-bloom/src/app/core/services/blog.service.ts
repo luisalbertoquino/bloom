@@ -1,8 +1,10 @@
 // src/app/core/services/blog.service.ts
 import { Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
+import { Observable, throwError, of } from 'rxjs';
+import { HttpBaseService } from './http-base.service';
 import { environment } from '../../../environments/environment';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
+import { catchError, retry, delay } from 'rxjs/operators';
 import { CookieManagerService } from './cookie-manager.service';
 
 export interface BlogPost {
@@ -21,88 +23,57 @@ export interface BlogPost {
 })
 export class BlogService {
   private apiUrl = environment.apiUrl;
-  private readonly PUBLIC_ENDPOINTS = [
-    `${this.apiUrl}/blog-posts`,
-    `${this.apiUrl}/blog-posts/featured`,
-    `${this.apiUrl}/blog-posts/\\d+` // Para rutas como /blog-posts/1
-  ];
 
   constructor(
+    private httpBase: HttpBaseService,
     private http: HttpClient,
     private cookieManager: CookieManagerService
   ) { }
 
-  // ==================== MÉTODOS PÚBLICOS (GET) ====================
+  // Obtener todas las entradas de blog con reintentos automáticos
   getPosts(): Observable<BlogPost[]> {
-    return this.http.get<BlogPost[]>(`${this.apiUrl}/blog-posts`, {
-      headers: this.getPublicHeaders(),
-      withCredentials: false // Importante: no enviar cookies en GET públicos
-    });
+    return this.httpBase.get<BlogPost[]>(`${this.apiUrl}/blog-posts`).pipe(
+      catchError((error) => {
+        console.error('Error al obtener entradas de blog:', error);
+        
+        if (error.status === 0 || error.status === 431 || error.status === 419) {
+          // Limpiar cookies antes de reintentar
+          this.cookieManager.cleanRouteCookies();
+          console.log('Reintentando obtener entradas de blog después de limpiar cookies...');
+          return of([]).pipe(
+            delay(800),
+            retry(1)
+          );
+        }
+        
+        return throwError(() => error);
+      })
+    );
   }
 
+  // Obtener entradas destacadas
   getFeaturedPosts(): Observable<BlogPost[]> {
-    return this.http.get<BlogPost[]>(`${this.apiUrl}/blog-posts/featured`, {
-      headers: this.getPublicHeaders(),
-      withCredentials: false
-    });
+    return this.httpBase.get<BlogPost[]>(`${this.apiUrl}/blog-posts/featured`);
   }
 
+  // Obtener una entrada por ID
   getPost(id: number): Observable<BlogPost> {
-    return this.http.get<BlogPost>(`${this.apiUrl}/blog-posts/${id}`, {
-      headers: this.getPublicHeaders(),
-      withCredentials: false
-    });
+    return this.httpBase.get<BlogPost>(`${this.apiUrl}/blog-posts/${id}`);
   }
 
-  // ==================== MÉTODOS ADMINISTRATIVOS (CRUD) ====================
-  createPost(postData: FormData): Observable<BlogPost> {
-    this.cookieManager.cleanNonEssentialCookies();
-    return this.http.post<BlogPost>(`${this.apiUrl}/blog-posts`, postData, {
-      headers: this.getAdminHeaders(),
-      withCredentials: true // Solo necesario para operaciones que requieren autenticación
-    });
+  // Crear entrada (simplificado usando httpBase)
+  createPost(formData: FormData): Observable<BlogPost> {
+    return this.httpBase.post<BlogPost>(`${this.apiUrl}/blog-posts`, formData);
   }
 
-  updatePost(id: number, postData: FormData): Observable<BlogPost> {
-    this.cookieManager.cleanNonEssentialCookies();
-    postData.append('_method', 'PUT');
-    return this.http.post<BlogPost>(`${this.apiUrl}/blog-posts/${id}`, postData, {
-      headers: this.getAdminHeaders(),
-      withCredentials: true
-    });
+  // Actualizar entrada (simplificado usando httpBase)
+  updatePost(id: number, formData: FormData): Observable<BlogPost> {
+    formData.append('_method', 'PUT');
+    return this.httpBase.post<BlogPost>(`${this.apiUrl}/blog-posts/${id}`, formData);
   }
 
+  // Eliminar entrada (simplificado usando httpBase)
   deletePost(id: number): Observable<any> {
-    this.cookieManager.cleanNonEssentialCookies();
-    return this.http.delete<any>(`${this.apiUrl}/blog-posts/${id}`, {
-      headers: this.getAdminHeaders(),
-      withCredentials: true
-    });
-  }
-
-  // ==================== HELPERS ====================
-  private getPublicHeaders(): HttpHeaders {
-    return new HttpHeaders({
-      'Accept': 'application/json',
-      'Content-Type': 'application/json',
-      'X-Requested-With': 'XMLHttpRequest'
-    });
-  }
-
-  private getAdminHeaders(): HttpHeaders {
-    const token = this.cookieManager.getToken();
-    return new HttpHeaders({
-      'X-XSRF-TOKEN': token || '',
-      'X-Requested-With': 'XMLHttpRequest',
-      'Accept': 'application/json'
-    });
-  }
-
-  // Verifica si una URL es pública (para uso en interceptores)
-  isPublicEndpoint(url: string): boolean {
-    return this.PUBLIC_ENDPOINTS.some(pattern => {
-      const regex = new RegExp(`^${pattern.replace(/\d+/g, '\\d+')}$`);
-      return regex.test(url);
-    });
+    return this.httpBase.delete<any>(`${this.apiUrl}/blog-posts/${id}`);
   }
 }

@@ -4,8 +4,9 @@ import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { BlogService, BlogPost } from '../../../core/services/blog.service';
 import { AuthService } from '../../../core/services/auth.service';
+import { CookieCleanupService } from '../../../core/services/cookie-cleanup.service'; // Importar servicio
 import { environment } from '../../../../environments/environment';
-import { switchMap } from 'rxjs/operators';
+import { switchMap, finalize } from 'rxjs/operators';
 import { of } from 'rxjs';
 
 @Component({
@@ -41,12 +42,42 @@ export class BlogManagementComponent implements OnInit {
   constructor(
     private blogService: BlogService,
     private fb: FormBuilder,
-    private authService: AuthService
+    private authService: AuthService,
+    private cookieCleanupService: CookieCleanupService // Inyectar servicio
   ) { }
 
   ngOnInit(): void {
+    // Limpiar cookies al iniciar el componente silenciosamente
+    this.silentCleanup();
+    
     this.initForm();
     this.loadBlogPosts();
+  }
+  
+  /**
+   * Realiza una limpieza silenciosa de cookies sin notificar al usuario
+   */
+  private silentCleanup(): void {
+    // Verificar el tamaño de las cookies
+    const cookies = this.cookieCleanupService.getAllCookies();
+    const totalSize = this.cookieCleanupService.calculateCookiesSize(cookies);
+    
+    // Si el tamaño excede cierto umbral, realizar una limpieza
+    if (totalSize > 2000) { // 2KB
+      console.log('[Cookie Cleanup] Limpieza preventiva, tamaño: ' + totalSize + ' bytes');
+      this.cookieCleanupService.cleanupCookies();
+      this.cookieCleanupService.cleanupLocalStorage();
+    }
+  }
+  
+  /**
+   * Realiza una limpieza exhaustiva después de operaciones CRUD
+   * @param operation Nombre de la operación realizada
+   */
+  private afterCrudOperation(operation: string): void {
+    console.log(`[Cookie Cleanup] Limpieza post-operación: ${operation}`);
+    this.cookieCleanupService.cleanupCookies();
+    this.cookieCleanupService.cleanupLocalStorage();
   }
 
   initForm(): void {
@@ -59,16 +90,36 @@ export class BlogManagementComponent implements OnInit {
 
   loadBlogPosts(): void {
     this.isLoading = true;
+    
+    // Limpieza silenciosa antes de cargar
+    this.silentCleanup();
+    
     this.blogService.getPosts().subscribe({
       next: (posts) => {
         this.blogPosts = posts;
         this.applyFilters();
         this.isLoading = false;
+        
+        // Limpieza después de la operación exitosa
+        this.afterCrudOperation('load-posts');
       },
       error: (error) => {
         console.error('Error loading blog posts', error);
         this.errorMessage = 'Error al cargar las entradas del blog. Por favor, inténtalo de nuevo.';
         this.isLoading = false;
+        
+        // Si hay error 431, limpiar de forma más agresiva
+        if (error.status === 431) {
+          console.log('[Cookie Cleanup] Error 431 detectado, limpieza agresiva');
+          this.cookieCleanupService.cleanupCookies();
+          this.cookieCleanupService.cleanupProductCookies();
+          this.cookieCleanupService.cleanupLocalStorage();
+          
+          // Intentar recargar automáticamente después de una limpieza
+          setTimeout(() => {
+            this.loadBlogPosts();
+          }, 500);
+        }
       }
     });
   }
@@ -94,9 +145,15 @@ export class BlogManagementComponent implements OnInit {
     this.isEditing = false;
     this.currentPostId = null;
     this.resetForm();
+    
+    // Limpieza silenciosa
+    this.silentCleanup();
   }
 
   editBlogPost(post: BlogPost): void {
+    // Limpieza silenciosa
+    this.silentCleanup();
+    
     this.showForm = true;
     this.isEditing = true;
     this.currentPostId = post.id;
@@ -114,6 +171,9 @@ export class BlogManagementComponent implements OnInit {
   cancelForm(): void {
     this.showForm = false;
     this.resetForm();
+    
+    // Limpieza silenciosa al cancelar
+    this.silentCleanup();
   }
 
   resetForm(): void {
@@ -128,12 +188,10 @@ export class BlogManagementComponent implements OnInit {
     this.imageError = null;
   }
 
-  // Validar tamaño del archivo
   validateFileSize(file: File): boolean {
     return file.size <= this.maxFileSize;
   }
 
-  // Convertir bytes a MB para mensajes de error
   formatFileSize(bytes: number): string {
     return (bytes / (1024 * 1024)).toFixed(2);
   }
@@ -175,6 +233,9 @@ export class BlogManagementComponent implements OnInit {
     this.isSubmitting = true;
     this.errorMessage = '';
     this.successMessage = '';
+    
+    // Limpieza silenciosa antes de enviar
+    this.silentCleanup();
 
     const formData = new FormData();
     formData.append('title', this.blogForm.get('title')?.value);
@@ -188,11 +249,19 @@ export class BlogManagementComponent implements OnInit {
     // Refrescar token CSRF antes de enviar datos
     this.authService.refreshCsrfToken().pipe(
       switchMap(() => {
+        // Limpieza después de refrescar token
+        this.silentCleanup();
+        
         if (this.isEditing && this.currentPostId) {
           return this.blogService.updatePost(this.currentPostId, formData);
         } else {
           return this.blogService.createPost(formData);
         }
+      }),
+      finalize(() => {
+        // Limpieza después de la operación (éxito o error)
+        const operation = this.isEditing ? 'update-post' : 'create-post';
+        this.afterCrudOperation(operation);
       })
     ).subscribe({
       next: (post) => {
@@ -205,6 +274,9 @@ export class BlogManagementComponent implements OnInit {
   }
 
   toggleFeatured(post: BlogPost): void {
+    // Limpieza silenciosa
+    this.silentCleanup();
+    
     const formData = new FormData();
     formData.append('title', post.title);
     formData.append('content', post.content);
@@ -212,7 +284,13 @@ export class BlogManagementComponent implements OnInit {
     
     // Refrescar token CSRF antes de actualizar estado
     this.authService.refreshCsrfToken().pipe(
-      switchMap(() => this.blogService.updatePost(post.id, formData))
+      switchMap(() => {
+        this.silentCleanup();
+        return this.blogService.updatePost(post.id, formData);
+      }),
+      finalize(() => {
+        this.afterCrudOperation('toggle-featured');
+      })
     ).subscribe({
       next: (updatedPost) => {
         const index = this.blogPosts.findIndex(p => p.id === updatedPost.id);
@@ -227,15 +305,37 @@ export class BlogManagementComponent implements OnInit {
         console.error('Error updating post featured status', error);
         this.errorMessage = `Error al actualizar el estado destacado de "${post.title}".`;
         setTimeout(() => this.errorMessage = '', 3000);
+        
+        // Limpieza agresiva para error 431
+        if (error.status === 431) {
+          console.log('[Cookie Cleanup] Error 431 detectado, limpieza agresiva');
+          this.cookieCleanupService.cleanupCookies();
+          this.cookieCleanupService.cleanupProductCookies();
+          this.cookieCleanupService.cleanupLocalStorage();
+          
+          // Intentar la operación nuevamente después de un breve retraso
+          setTimeout(() => {
+            this.toggleFeatured(post);
+          }, 500);
+        }
       }
     });
   }
 
   deleteBlogPost(post: BlogPost): void {
     if (confirm(`¿Estás seguro de que deseas eliminar la entrada "${post.title}"?`)) {
+      // Limpieza silenciosa
+      this.silentCleanup();
+      
       // Refrescar token CSRF antes de eliminar
       this.authService.refreshCsrfToken().pipe(
-        switchMap(() => this.blogService.deletePost(post.id))
+        switchMap(() => {
+          this.silentCleanup();
+          return this.blogService.deletePost(post.id);
+        }),
+        finalize(() => {
+          this.afterCrudOperation('delete-post');
+        })
       ).subscribe({
         next: () => {
           this.blogPosts = this.blogPosts.filter(p => p.id !== post.id);
@@ -247,6 +347,16 @@ export class BlogManagementComponent implements OnInit {
           console.error('Error deleting blog post', error);
           this.errorMessage = `Error al eliminar la entrada "${post.title}".`;
           setTimeout(() => this.errorMessage = '', 3000);
+          
+          // Limpieza agresiva para error 431
+          if (error.status === 431) {
+            console.log('[Cookie Cleanup] Error 431 detectado, limpieza agresiva');
+            this.cookieCleanupService.cleanupCookies();
+            this.cookieCleanupService.cleanupProductCookies();
+            this.cookieCleanupService.cleanupLocalStorage();
+            
+            // No intentamos automáticamente de nuevo la eliminación por seguridad
+          }
         }
       });
     }
@@ -258,14 +368,32 @@ export class BlogManagementComponent implements OnInit {
     this.showForm = false;
     this.loadBlogPosts();
     setTimeout(() => this.successMessage = '', 3000);
+    
+    // Limpieza silenciosa después del éxito
+    this.silentCleanup();
   }
 
   private handleError(error: any): void {
     this.isSubmitting = false;
     console.error('Error submitting form', error);
     
+    // Limpieza agresiva para error 431
+    if (error.status === 431) {
+      console.log('[Cookie Cleanup] Error 431 detectado, limpieza agresiva');
+      this.cookieCleanupService.cleanupCookies();
+      this.cookieCleanupService.cleanupProductCookies();
+      this.cookieCleanupService.cleanupLocalStorage();
+      
+      this.errorMessage = 'Error procesando la solicitud. Intentando resolver automáticamente...';
+      
+      // Intentar nuevamente la operación después de limpiar
+      setTimeout(() => {
+        this.errorMessage = '';
+        // No reintentamos automáticamente para evitar ciclos infinitos
+      }, 3000);
+    }
     // Verificar si es un error de autenticación
-    if (error.status === 401) {
+    else if (error.status === 401) {
       this.errorMessage = 'Tu sesión ha expirado. Por favor, inicia sesión nuevamente.';
       // Redirigir al login después de 2 segundos
       setTimeout(() => {

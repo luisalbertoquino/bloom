@@ -6,6 +6,7 @@ import { NavbarComponent } from '../../../shared/components/navbar/navbar.compon
 import { FooterComponent } from '../../../shared/components/footer/footer.component';
 import { BlogService, BlogPost } from '../../../core/services/blog.service';
 import { environment } from '../../../../environments/environment';
+import { CookieManagerService } from '../../../core/services/cookie-manager.service';
 
 @Component({
   selector: 'app-blog-list',
@@ -23,29 +24,69 @@ export class BlogListComponent implements OnInit {
   blogPosts: BlogPost[] = [];
   isLoading = true;
   storageUrl = environment.storageUrl;
+  private readonly ALLOWED_COOKIES = ['bloom_session', 'XSRF-TOKEN'];
 
   constructor(
-    private blogService: BlogService
+    private blogService: BlogService,
+    private cookieManager: CookieManagerService
   ) { }
 
   ngOnInit(): void {
+    this.cleanNonEssentialCookies();
     this.loadBlogPosts();
+  }
+
+  private cleanNonEssentialCookies(): void {
+    // Limpieza agresiva de cookies no esenciales
+    document.cookie.split(';').forEach(cookie => {
+      const [name] = cookie.trim().split('=');
+      if (name && !this.ALLOWED_COOKIES.includes(name)) {
+        this.deleteCookie(name);
+      }
+    });
+  }
+
+  private deleteCookie(name: string): void {
+    // Eliminar cookie en todos los dominios y rutas posibles
+    const domains = [
+      window.location.hostname,
+      '.' + window.location.hostname,
+      'localhost',
+      ''
+    ];
+
+    const paths = ['/', '/blog', '/api', ''];
+
+    domains.forEach(domain => {
+      paths.forEach(path => {
+        document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=${path}; domain=${domain}`;
+      });
+    });
   }
 
   loadBlogPosts(): void {
     this.isLoading = true;
-    this.blogService.getPosts().subscribe(
-      (posts: BlogPost[]) => {
-        if (posts && Array.isArray(posts)) {
-          this.blogPosts = posts;
-        }
+    this.blogService.getPosts().subscribe({
+      next: (posts: BlogPost[]) => {
+        this.blogPosts = Array.isArray(posts) ? posts : [];
         this.isLoading = false;
+        
+        // Limpieza post-carga por si acaso
+        setTimeout(() => this.cleanNonEssentialCookies(), 100);
       },
-      (error: any) => {
+      error: (error: any) => {
         console.error('Error loading blog posts', error);
         this.isLoading = false;
+        
+        // Limpieza adicional en caso de error
+        this.cleanNonEssentialCookies();
+        
+        // Recargar si es error de cookies
+        if (error.status === 431 || error.status === 419) {
+          window.location.reload();
+        }
       }
-    );
+    });
   }
 
   getExcerpt(html: string): string {
@@ -57,5 +98,11 @@ export class BlogListComponent implements OnInit {
   getImageUrl(path: string): string {
     if (!path) return '/assets/images/placeholder.jpg';
     return this.storageUrl + path;
+  }
+
+  // Manejo de recarga/actualización
+  onRefresh(): void {
+    this.cleanNonEssentialCookies();
+    this.loadBlogPosts();
   }
 }

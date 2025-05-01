@@ -1,9 +1,11 @@
 // src/app/core/services/category.service.ts
 import { Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
+import { Observable, throwError, of } from 'rxjs';
 import { HttpBaseService } from './http-base.service';
 import { environment } from '../../../environments/environment';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { catchError, retry, delay } from 'rxjs/operators';
+import { CookieManagerService } from './cookie-manager.service';
 
 export interface Category {
   id: number;
@@ -21,12 +23,29 @@ export class CategoryService {
 
   constructor(
     private httpBase: HttpBaseService,
-    private http: HttpClient  // Añadir esta línea
+    private http: HttpClient,
+    private cookieManager: CookieManagerService
   ) { }
 
-  // Obtener todas las categorías
+  // Obtener todas las categorías con reintentos automáticos
   getCategories(): Observable<Category[]> {
-    return this.httpBase.get<Category[]>(`${this.apiUrl}/categories`);
+    return this.httpBase.get<Category[]>(`${this.apiUrl}/categories`).pipe(
+      catchError((error) => {
+        console.error('Error al obtener categorías:', error);
+        
+        if (error.status === 0 || error.status === 431 || error.status === 419) {
+          // Limpiar cookies antes de reintentar
+          this.cookieManager.cleanRouteCookies();
+          console.log('Reintentando obtener categorías después de limpiar cookies...');
+          return of([]).pipe(
+            delay(800),
+            retry(1)
+          );
+        }
+        
+        return throwError(() => error);
+      })
+    );
   }
 
   // Obtener una categoría por ID
@@ -34,59 +53,19 @@ export class CategoryService {
     return this.httpBase.get<Category>(`${this.apiUrl}/categories/${id}`);
   }
 
-  // Solo para administradores
-  createCategory(formData: FormData, categoryId?: number): Observable<Category> {
-    const url = categoryId 
-      ? `${this.apiUrl}/categories/${categoryId}` 
-      : `${this.apiUrl}/categories`;
-    
-    const headers = new HttpHeaders({
-      'X-XSRF-TOKEN': decodeURIComponent(this.getTokenFromCookie('XSRF-TOKEN') || ''),
-      'X-Requested-With': 'XMLHttpRequest'
-    });
-    
-    return this.http.post<Category>(url, formData, { 
-      headers: headers,
-      withCredentials: true 
-    });
+  // Crear categoría (simplificado usando httpBase)
+  createCategory(formData: FormData): Observable<Category> {
+    return this.httpBase.post<Category>(`${this.apiUrl}/categories`, formData);
   }
 
-  private getTokenFromCookie(name: string): string | null {
-    const cookies = document.cookie.split(';');
-    for (const cookie of cookies) {
-      const [cookieName, cookieValue] = cookie.trim().split('=');
-      if (cookieName === name) {
-        return cookieValue;
-      }
-    }
-    return null;
-  }
-
-  // Actualizar categoría usando el nuevo método
+  // Actualizar categoría (simplificado usando httpBase)
   updateCategory(id: number, formData: FormData): Observable<Category> {
-    // Simulando PUT con POST para mejor compatibilidad con FormData en Laravel
     formData.append('_method', 'PUT');
-    
-    const headers = new HttpHeaders({
-      'X-XSRF-TOKEN': decodeURIComponent(this.getTokenFromCookie('XSRF-TOKEN') || ''),
-      'X-Requested-With': 'XMLHttpRequest'
-    });
-    
-    return this.http.post<Category>(`${this.apiUrl}/categories/${id}`, formData, {
-      headers: headers,
-      withCredentials: true
-    });
+    return this.httpBase.post<Category>(`${this.apiUrl}/categories/${id}`, formData);
   }
 
+  // Eliminar categoría (simplificado usando httpBase)
   deleteCategory(id: number): Observable<any> {
-    const headers = new HttpHeaders({
-      'X-XSRF-TOKEN': decodeURIComponent(this.getTokenFromCookie('XSRF-TOKEN') || ''),
-      'X-Requested-With': 'XMLHttpRequest'
-    });
-    
-    return this.http.delete<any>(`${this.apiUrl}/categories/${id}`, {
-      headers: headers,
-      withCredentials: true
-    });
+    return this.httpBase.delete<any>(`${this.apiUrl}/categories/${id}`);
   }
 }

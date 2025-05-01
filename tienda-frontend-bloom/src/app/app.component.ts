@@ -1,9 +1,10 @@
-import { Component, OnInit, Inject, PLATFORM_ID, APP_INITIALIZER } from '@angular/core';
+import { Component, OnInit, Inject, PLATFORM_ID } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { isPlatformBrowser } from '@angular/common';
 import { ThemeService } from './core/services/theme.service';
 import { SettingsService } from './core/services/settings.service';
 import { firstValueFrom } from 'rxjs';
+import { RouteCookieHandlerService } from './core/services/route-cookie-handler.service';
 
 @Component({
   selector: 'app-root',
@@ -19,6 +20,7 @@ export class AppComponent implements OnInit {
   constructor(
     private themeService: ThemeService,
     private settingsService: SettingsService,
+    private routeCookieHandler: RouteCookieHandlerService,
     @Inject(PLATFORM_ID) private platformId: Object
   ) {
     this.isBrowser = isPlatformBrowser(this.platformId);
@@ -27,6 +29,9 @@ export class AppComponent implements OnInit {
   async ngOnInit(): Promise<void> {
     if (this.isBrowser) {
       try {
+        // Iniciar limpieza de cookies de ruta
+        this.routeCookieHandler.cleanRouteCookies();
+        
         // Cargar configuraciones primero y esperar a que completen
         const settings = await firstValueFrom(this.settingsService.getSettings());
         

@@ -6,7 +6,8 @@ import { ProductService, Product } from '../../../core/services/product.service'
 import { CategoryService, Category } from '../../../core/services/category.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { environment } from '../../../../environments/environment';
-import { switchMap } from 'rxjs/operators';
+import { catchError } from 'rxjs/operators';
+import { of } from 'rxjs';
 
 @Component({
   selector: 'app-product-management',
@@ -35,6 +36,7 @@ export class ProductManagementComponent implements OnInit {
   storageUrl = environment.storageUrl;
   searchTerm = '';
   filterCategory = 0; // 0 significa todas las categorías
+  autoRetrying = false;
 
   // Control de errores en la carga de imágenes
   imageError: string | null = null;
@@ -71,23 +73,52 @@ export class ProductManagementComponent implements OnInit {
       },
       error: (error) => {
         console.error('Error loading categories', error);
-        this.errorMessage = 'Error al cargar las categorías. Por favor, inténtalo de nuevo.';
+        this.errorMessage = 'Error al cargar las categorías. Inténtalo de nuevo más tarde.';
+        
+        // Reintento automático para errores de conexión
+        if ((error.status === 0 || error.status === 431 || error.status === 419) && !this.autoRetrying) {
+          this.autoRetrying = true;
+          this.errorMessage = 'Reestableciendo conexión...';
+          setTimeout(() => {
+            this.autoRetrying = false;
+            this.loadCategories();
+          }, 1000);
+        }
       }
     });
   }
 
   loadProducts(): void {
     this.isLoading = true;
+    this.errorMessage = '';
+    
     this.productService.getProducts().subscribe({
       next: (products) => {
         this.products = products;
         this.applyFilters();
         this.isLoading = false;
+        this.autoRetrying = false;
       },
       error: (error) => {
         console.error('Error loading products', error);
-        this.errorMessage = 'Error al cargar los productos. Por favor, inténtalo de nuevo.';
         this.isLoading = false;
+        
+        if (error.status === 401) {
+          this.errorMessage = 'Tu sesión ha expirado. Serás redirigido a la página de inicio de sesión.';
+          this.handleSessionExpired();
+        } else {
+          this.errorMessage = 'Error al cargar los productos. Inténtalo de nuevo más tarde.';
+          
+          // Reintento automático para errores de conexión
+          if ((error.status === 0 || error.status === 431 || error.status === 419) && !this.autoRetrying) {
+            this.autoRetrying = true;
+            this.errorMessage = 'Reestableciendo conexión...';
+            setTimeout(() => {
+              this.autoRetrying = false;
+              this.loadProducts();
+            }, 1000);
+          }
+        }
       }
     });
   }
@@ -165,6 +196,7 @@ export class ProductManagementComponent implements OnInit {
     this.errorMessage = '';
     this.successMessage = '';
     this.imageError = null;
+    this.autoRetrying = false;
   }
 
   // Validar tamaño del archivo
@@ -221,6 +253,7 @@ export class ProductManagementComponent implements OnInit {
     this.isSubmitting = true;
     this.errorMessage = '';
     this.successMessage = '';
+    this.autoRetrying = false;
 
     const formData = new FormData();
     formData.append('name', this.productForm.get('name')?.value);
@@ -234,32 +267,34 @@ export class ProductManagementComponent implements OnInit {
       formData.append('main_image', this.selectedFile);
     }
 
-    // Refrescar token CSRF antes de enviar datos
-    this.authService.refreshCsrfToken().pipe(
-      switchMap(() => {
-        if (this.isEditing && this.currentProductId) {
-          // Actualizar producto existente
-          return this.productService.updateProduct(this.currentProductId, formData);
-        } else {
-          // Crear nuevo producto
-          return this.productService.createProduct(formData);
+    // Ya no es necesario refrescar explícitamente el token CSRF
+    // El servicio tiene reintentos automáticos incorporados
+    if (this.isEditing && this.currentProductId) {
+      // Actualizar producto existente
+      this.productService.updateProduct(this.currentProductId, formData).subscribe({
+        next: () => {
+          this.handleSuccess('Producto actualizado correctamente.');
+        },
+        error: (error) => {
+          this.handleError(error);
         }
-      })
-    ).subscribe({
-      next: (product) => {
-        this.handleSuccess(this.isEditing ? 'Producto actualizado correctamente.' : 'Producto creado correctamente.');
-      },
-      error: (error) => {
-        this.handleError(error);
-      }
-    });
+      });
+    } else {
+      // Crear nuevo producto
+      this.productService.createProduct(formData).subscribe({
+        next: () => {
+          this.handleSuccess('Producto creado correctamente.');
+        },
+        error: (error) => {
+          this.handleError(error);
+        }
+      });
+    }
   }
 
   toggleProductAvailability(product: Product): void {
-    // Refrescar token CSRF antes de actualizar disponibilidad
-    this.authService.refreshCsrfToken().pipe(
-      switchMap(() => this.productService.toggleAvailability(product.id))
-    ).subscribe({
+    // Ya no es necesario refrescar explícitamente el token CSRF
+    this.productService.toggleAvailability(product.id).subscribe({
       next: () => {
         // Actualizar estado del producto localmente
         product.available = !product.available;
@@ -269,17 +304,26 @@ export class ProductManagementComponent implements OnInit {
       error: (error) => {
         console.error('Error toggling product availability', error);
         this.errorMessage = `Error al actualizar el estado de "${product.name}".`;
-        setTimeout(() => this.errorMessage = '', 3000);
+        
+        // Reintento automático para errores de conexión
+        if ((error.status === 0 || error.status === 431 || error.status === 419) && !this.autoRetrying) {
+          this.autoRetrying = true;
+          this.errorMessage = 'Reestableciendo conexión...';
+          setTimeout(() => {
+            this.autoRetrying = false;
+            this.toggleProductAvailability(product);
+          }, 1000);
+        } else {
+          setTimeout(() => this.errorMessage = '', 3000);
+        }
       }
     });
   }
 
   deleteProduct(product: Product): void {
     if (confirm(`¿Estás seguro de que deseas eliminar el producto "${product.name}"?`)) {
-      // Refrescar token CSRF antes de eliminar
-      this.authService.refreshCsrfToken().pipe(
-        switchMap(() => this.productService.deleteProduct(product.id))
-      ).subscribe({
+      // Ya no es necesario refrescar explícitamente el token CSRF
+      this.productService.deleteProduct(product.id).subscribe({
         next: () => {
           this.products = this.products.filter(p => p.id !== product.id);
           this.applyFilters();
@@ -289,7 +333,18 @@ export class ProductManagementComponent implements OnInit {
         error: (error) => {
           console.error('Error deleting product', error);
           this.errorMessage = `Error al eliminar el producto "${product.name}".`;
-          setTimeout(() => this.errorMessage = '', 3000);
+          
+          // Reintento automático para errores de conexión
+          if ((error.status === 0 || error.status === 431 || error.status === 419) && !this.autoRetrying) {
+            this.autoRetrying = true;
+            this.errorMessage = 'Reestableciendo conexión...';
+            setTimeout(() => {
+              this.autoRetrying = false;
+              this.deleteProduct(product);
+            }, 1000);
+          } else {
+            setTimeout(() => this.errorMessage = '', 3000);
+          }
         }
       });
     }
@@ -314,29 +369,41 @@ export class ProductManagementComponent implements OnInit {
     
     // Verificar si es un error de autenticación
     if (error.status === 401) {
-      this.errorMessage = 'Tu sesión ha expirado. Por favor, inicia sesión nuevamente.';
-      // Redirigir al login después de 2 segundos
+      this.errorMessage = 'Tu sesión ha expirado. Serás redirigido a la página de inicio de sesión.';
+      this.handleSessionExpired();
+    } else if (error.status === 422) {
+      // Error de validación
+      if (error.error && error.error.errors) {
+        const firstError = Object.values(error.error.errors)[0];
+        this.errorMessage = Array.isArray(firstError) ? firstError[0] : String(firstError);
+      } else {
+        this.errorMessage = 'Error de validación. Por favor, revisa los datos ingresados.';
+      }
+    } else if ((error.status === 0 || error.status === 431 || error.status === 419) && !this.autoRetrying) {
+      // Errores de conexión o CSRF - reintentar automáticamente
+      this.autoRetrying = true;
+      this.errorMessage = 'Reestableciendo conexión...';
       setTimeout(() => {
-        this.authService.logout().subscribe({
-          next: () => {
-            // La redirección se maneja en el servicio AuthService
-          },
-          error: () => {
-            // Forzar redirección en caso de error
-            window.location.href = '/login';
-          }
-        });
-      }, 2000);
-    } else if (error.status === 419) {
-      // Error específico de CSRF token mismatch
-      this.errorMessage = 'Error de seguridad. Por favor, intenta de nuevo.';
-    } else if (error.error && error.error.message) {
-      this.errorMessage = error.error.message;
-    } else if (error.error && error.error.errors) {
-      this.errorMessage = Object.values(error.error.errors)[0] as string;
+        this.autoRetrying = false;
+        this.onSubmit(); // Reintentar la operación
+      }, 1000);
     } else {
-      this.errorMessage = 'Error al guardar el producto. Por favor, inténtalo de nuevo.';
+      this.errorMessage = 'Error al guardar el producto. Por favor, inténtalo de nuevo más tarde.';
     }
+  }
+
+  private handleSessionExpired(): void {
+    setTimeout(() => {
+      this.authService.logout().subscribe({
+        next: () => {
+          // La redirección se maneja en el servicio AuthService
+        },
+        error: () => {
+          // Forzar redirección en caso de error
+          window.location.href = '/login';
+        }
+      });
+    }, 2000);
   }
 
   getImageUrl(path: string): string {

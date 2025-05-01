@@ -1,20 +1,38 @@
 // src/app/core/core.module.ts
-import { NgModule } from '@angular/core';
+import { NgModule, Optional, SkipSelf } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { HTTP_INTERCEPTORS } from '@angular/common/http';
-import { AuthInterceptor } from './interceptors/auth.interceptor';
-
+import { HttpClientModule } from '@angular/common/http';
+import { AuthService } from './services/auth.service';
+import { HttpBaseService } from './services/http-base.service';
+import { SettingsService } from './services/settings.service';
+import { CookieCleanupService } from './services/cookie-cleanup.service';
 @NgModule({
   declarations: [],
   imports: [
-    CommonModule
+    CommonModule,
+    HttpClientModule
   ],
   providers: [
-    {
-      provide: HTTP_INTERCEPTORS,
-      useClass: AuthInterceptor,
-      multi: true
-    }
+    AuthService,
+    HttpBaseService,
+    SettingsService,
+    CookieCleanupService
   ]
 })
-export class CoreModule { }
+export class CoreModule {
+  // Constructor para prevenir la importación múltiple del módulo
+  constructor(
+    @Optional() @SkipSelf() parentModule: CoreModule,
+    // Inyectar CookieCleanupService para inicializarlo
+    private cookieCleanupService: CookieCleanupService
+  ) {
+    if (parentModule) {
+      throw new Error(
+        'CoreModule ya está cargado. Importalo solo en AppModule.'
+      );
+    }
+    
+    // Ejecutar limpieza inicial al cargar la aplicación
+    this.cookieCleanupService.cleanupCookies();
+  }
+}

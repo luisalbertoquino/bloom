@@ -19,10 +19,14 @@ class AuthController extends Controller
             'password' => 'required',
         ]);
 
+        // Cambiar aquí para devolver 401 en lugar de lanzar una excepción
         if (!Auth::attempt($request->only('email', 'password'))) {
-            throw ValidationException::withMessages([
-                'email' => ['Las credenciales proporcionadas son incorrectas.'],
-            ]);
+            return response()->json([
+                'message' => 'Las credenciales proporcionadas son incorrectas.',
+                'errors' => [
+                    'email' => ['Las credenciales proporcionadas son incorrectas.']
+                ]
+            ], 401); // Unauthorized
         }
 
         $user = $request->user();

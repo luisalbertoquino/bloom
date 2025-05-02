@@ -1,9 +1,11 @@
 // src/app/features/auth/login/login.component.scss
 
 // Variables para reutilización
-:root {
-  --primary-color: #fc6280;
-  --primary-dark: #e84e6f;
+:host {
+  --primary-color: var(--color-primary, #fc6280);
+  --primary-dark: var(--color-primary-dark, #e84e6f);
+  --secondary-color: var(--color-secondary, #4F46E5);
+  --secondary-dark: var(--color-secondary-dark, #3730A3);
   --text-dark: #333;
   --text-medium: #4a5568;
   --text-light: #666;
@@ -18,7 +20,10 @@
   align-items: center;
   justify-content: center;
   min-height: 100vh;
-  background: linear-gradient(135deg, rgba(252, 98, 128, 0.8) 0%, rgba(248, 165, 194, 0.6) 100%);
+  // Usar las variables para el fondo con gradiente
+  background: linear-gradient(135deg, 
+                  rgba(var(--primary-color-rgb, 252, 98, 128), 0.8) 0%, 
+                  rgba(var(--primary-color-rgb, 252, 98, 128), 0.6) 100%);
   padding: 2rem;
   position: relative;
   overflow: hidden;
@@ -300,8 +305,8 @@
 }
 
 .btn-primary {
-  background-color: #4f46e5;
-  border-color: #4338ca;
+  background-color: var(--secondary-color);
+  border-color: var(--secondary-dark);
   color: white;
   font-weight: 500;
   font-size: 0.875rem;
@@ -311,8 +316,8 @@
 }
 
 .btn-primary:hover {
-  background-color: #4338ca;
-  border-color: #3730a3;
+  background-color: var(--secondary-dark);
+  border-color: var(--secondary-dark);
 }
 
 .btn-primary:focus {

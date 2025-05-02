@@ -220,18 +220,23 @@ export class SettingsComponent implements OnInit {
       });
       return;
     }
-
+  
     // Verificar si hay errores de validación de archivos
     if (this.logoError || this.bannerError || this.faviconError) {
       this.errorMessage = 'Corrige los errores en los archivos antes de continuar.';
       setTimeout(() => this.errorMessage = '', 5000);
       return;
     }
-
+  
     this.isSubmitting = true;
     this.errorMessage = '';
     this.successMessage = '';
+<<<<<<< HEAD
 
+=======
+    this.autoRetrying = false;
+  
+>>>>>>> 0c2b243 (toda la funcionalidad basica full)
     const formData = new FormData();
     
     // Agregar todos los campos del formulario
@@ -251,18 +256,52 @@ export class SettingsComponent implements OnInit {
     if (this.selectedFaviconFile) {
       formData.append('favicon', this.selectedFaviconFile);
     }
+<<<<<<< HEAD
 
     // Usar el patrón simple como en el componente de categorías
     this.settingsService.updateSettings(formData).subscribe({
+=======
+  
+    this.settingsService.updateSettings(formData).pipe(
+      catchError(error => {
+        console.error('Error updating settings', error);
+        
+        if ((error.status === 0 || error.status === 431 || error.status === 419) && !this.autoRetrying) {
+          this.autoRetrying = true;
+          this.errorMessage = 'Reestableciendo conexión...';
+          setTimeout(() => {
+            this.autoRetrying = false;
+            this.onSubmit(); // Reintentar la operación
+          }, 1000);
+          return of(null);
+        }
+        
+        return of(null);
+      })
+    ).subscribe({
+>>>>>>> 0c2b243 (toda la funcionalidad basica full)
       next: (response) => {
         this.isSubmitting = false;
         this.successMessage = 'Configuración actualizada correctamente.';
         
-        // Actualizar el tema
+        // Actualizar el tema inmediatamente sin necesidad de recargar
         this.themeService.initializeTheme();
         
+<<<<<<< HEAD
         // Mostrar mensaje de confirmación
         this.showUpdateConfirmation = true;
+=======
+        // Recargar los settings para mostrar los cambios actualizados
+        this.loadSettings();
+        
+        // Ocultar el mensaje después de unos segundos
+        setTimeout(() => {
+          this.successMessage = '';
+        }, 5000);
+        
+        // Eliminar las variables que ya no son necesarias
+        this.showUpdateConfirmation = false; // No usaremos este diálogo
+>>>>>>> 0c2b243 (toda la funcionalidad basica full)
       },
       error: (error) => {
         this.handleError(error);

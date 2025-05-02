@@ -206,7 +206,7 @@ export class LoginComponent implements OnInit, OnDestroy {
     return !!(this.email?.invalid && (this.email?.dirty || this.email?.touched));
   }
   
-  hasPasswordErrors(): boolean {
+  hasPasswordErrors(): boolean { 
     return !!(this.password?.invalid && (this.password?.dirty || this.password?.touched));
   }
   

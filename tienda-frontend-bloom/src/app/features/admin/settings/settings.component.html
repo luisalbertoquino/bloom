@@ -14,20 +14,6 @@
     {{ errorMessage }}
   </div>
 
-  <!-- Mensaje de confirmación de actualización -->
-  <div *ngIf="showUpdateConfirmation" class="bg-blue-100 border border-blue-400 text-blue-700 px-4 py-3 m-4 rounded">
-    <div class="flex justify-between items-center">
-      <p>Los cambios se han guardado correctamente. ¿Deseas recargar la página para ver los cambios aplicados?</p>
-      <div class="flex space-x-2">
-        <button (click)="closeConfirmation()" class="px-3 py-1 bg-white text-blue-700 border border-blue-400 rounded-md hover:bg-blue-50">
-          No
-        </button>
-        <button (click)="reloadPage()" class="px-3 py-1 bg-blue-700 text-white rounded-md hover:bg-blue-800">
-          Sí, recargar
-        </button>
-      </div>
-    </div>
-  </div>
 
   <!-- Estado de carga -->
   <div *ngIf="isLoading" class="flex justify-center items-center p-12">

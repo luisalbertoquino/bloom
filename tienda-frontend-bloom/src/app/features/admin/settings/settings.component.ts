@@ -234,19 +234,19 @@ export class SettingsComponent implements OnInit {
       });
       return;
     }
-
+  
     // Verificar si hay errores de validación de archivos
     if (this.logoError || this.bannerError || this.faviconError) {
       this.errorMessage = 'Corrige los errores en los archivos antes de continuar.';
       setTimeout(() => this.errorMessage = '', 5000);
       return;
     }
-
+  
     this.isSubmitting = true;
     this.errorMessage = '';
     this.successMessage = '';
     this.autoRetrying = false;
-
+  
     const formData = new FormData();
     
     // Agregar todos los campos del formulario
@@ -266,8 +266,7 @@ export class SettingsComponent implements OnInit {
     if (this.selectedFaviconFile) {
       formData.append('favicon', this.selectedFaviconFile);
     }
-
-    // Ya no necesitamos refrescar el token CSRF explícitamente
+  
     this.settingsService.updateSettings(formData).pipe(
       catchError(error => {
         console.error('Error updating settings', error);
@@ -291,11 +290,19 @@ export class SettingsComponent implements OnInit {
         this.isSubmitting = false;
         this.successMessage = 'Configuración actualizada correctamente.';
         
-        // Actualizar el tema
+        // Actualizar el tema inmediatamente sin necesidad de recargar
         this.themeService.initializeTheme();
         
-        // Mostrar mensaje de confirmación en lugar de recargar automáticamente
-        this.showUpdateConfirmation = true;
+        // Recargar los settings para mostrar los cambios actualizados
+        this.loadSettings();
+        
+        // Ocultar el mensaje después de unos segundos
+        setTimeout(() => {
+          this.successMessage = '';
+        }, 5000);
+        
+        // Eliminar las variables que ya no son necesarias
+        this.showUpdateConfirmation = false; // No usaremos este diálogo
       },
       error: (error) => {
         this.handleError(error);

@@ -32,6 +32,8 @@ export class AuthService {
   private csrfTokenInitialized = false;
   private isBrowser: boolean;
   private tokenRefreshInProgress = false;
+  private authTimestamp: number | null = null;
+  private autoRefreshInterval: any = null;
 
   constructor(
     private http: HttpClient,
@@ -43,6 +45,28 @@ export class AuthService {
     this.isBrowser = isPlatformBrowser(this.platformId);
     this.currentUserSubject = new BehaviorSubject<User | null>(this.getUserFromStorage());
     this.currentUser = this.currentUserSubject.asObservable();
+    
+    // Verificar si hay sesión guardada
+    if (this.isBrowser && this.isAuthenticated) {
+      // Restaurar timestamp de autenticación si existe
+      const timestamp = localStorage.getItem('auth_timestamp');
+      if (timestamp) {
+        this.authTimestamp = parseInt(timestamp, 10);
+        
+        // Verificar si la sesión no está demasiado antigua (8 horas)
+        const now = Date.now();
+        const hoursDiff = (now - this.authTimestamp) / (1000 * 60 * 60);
+        
+        if (hoursDiff > 8) {
+          // Sesión demasiado antigua, limpiar datos
+          console.warn('Sesión antigua detectada. Cerrando sesión automáticamente.');
+          this.clearAuthData();
+        } else {
+          // Configurar renovación automática de token CSRF
+          this.setupAutoRefresh();
+        }
+      }
+    }
   }
 
   public get currentUserValue(): User | null {
@@ -85,35 +109,84 @@ export class AuthService {
     return null;
   }
 
+  // Configurar renovación automática de token CSRF
+  private setupAutoRefresh(): void {
+    // Limpiar intervalo existente si lo hay
+    if (this.autoRefreshInterval) {
+      clearInterval(this.autoRefreshInterval);
+    }
+    
+    // Renovar token cada 15 minutos para mantener la sesión activa
+    this.autoRefreshInterval = setInterval(() => {
+      if (this.isAuthenticated) {
+        this.refreshCsrfToken().subscribe({
+          next: () => console.log('Token CSRF renovado automáticamente'),
+          error: () => console.error('Error al renovar token CSRF automáticamente')
+        });
+      } else {
+        // Si ya no está autenticado, detener la renovación automática
+        this.stopAutoRefresh();
+      }
+    }, 15 * 60 * 1000); // 15 minutos
+    
+    console.log('Renovación automática de token CSRF configurada');
+  }
+  
+  // Detener renovación automática
+  private stopAutoRefresh(): void {
+    if (this.autoRefreshInterval) {
+      clearInterval(this.autoRefreshInterval);
+      this.autoRefreshInterval = null;
+      console.log('Renovación automática de token CSRF detenida');
+    }
+  }
+
   // Método revisado para inicializar el token CSRF
   initCsrfToken(): Observable<any> {
     if (this.csrfTokenInitialized && !this.tokenRefreshInProgress) {
-      console.log('Token CSRF ya inicializado, omitiendo solicitud');
-      return of(true);
+      // Verificar si realmente tenemos un token válido
+      const token = this.getXsrfTokenFromCookie() || localStorage.getItem('XSRF_TOKEN');
+      if (token && token.length > 20) {
+        console.log('Token CSRF válido existente');
+        
+        // Si hay token en localStorage pero no en cookie, restaurarlo
+        if (!this.getXsrfTokenFromCookie() && localStorage.getItem('XSRF_TOKEN')) {
+          const storedToken = localStorage.getItem('XSRF_TOKEN');
+          this.restoreTokenToCookie(storedToken!);
+          console.log('Token CSRF restaurado desde localStorage a cookie');
+        }
+        
+        return of(true);
+      }
     }
     
     this.tokenRefreshInProgress = true;
-    console.log('Solicitando CSRF token a:', `${environment.baseUrl}/sanctum/csrf-cookie`);
+    console.log('Solicitando CSRF token...');
     
-    // Primero, forzar limpieza del estado de CSRF
-    this.csrfTokenInitialized = false;
+    // Evitar duplicar la URL si ya contiene http
+    const csrfUrl = environment.baseUrl.startsWith('http') 
+      ? `${environment.baseUrl}/sanctum/csrf-cookie`
+      : `${window.location.origin}${environment.baseUrl}/sanctum/csrf-cookie`;
     
-    return this.http.get(`${environment.baseUrl}/sanctum/csrf-cookie`, {
+    return this.http.get(csrfUrl, {
       withCredentials: true,
       headers: new HttpHeaders({
         'X-Requested-With': 'XMLHttpRequest',
-        'Accept': 'application/json'
+        'Accept': 'application/json',
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0'
       })
     }).pipe(
-      // Delay crítico para asegurar que la cookie se procese correctamente
-      delay(300),
+      // Aumentar el delay para asegurar que la cookie se procese
+      delay(500),
       tap(() => {
         this.tokenRefreshInProgress = false;
         this.csrfTokenInitialized = true;
         
         if (this.isBrowser) {
           const token = this.getXsrfTokenFromCookie();
-          console.log('CSRF token después de inicializar:', token ? 'Obtenido' : 'No disponible');
+          console.log('CSRF token obtenido:', token ? token.substring(0, 10) + '...' : 'No disponible');
           
           // Guardar directamente en localStorage para reutilizar
           if (token) {
@@ -130,12 +203,29 @@ export class AuthService {
     );
   }
 
+  // Método para restaurar token desde localStorage a cookie
+  private restoreTokenToCookie(token: string): void {
+    if (!this.isBrowser) return;
+    
+    try {
+      // Calcular fecha de expiración (8 horas desde ahora)
+      const expiresDate = new Date();
+      expiresDate.setTime(expiresDate.getTime() + 8 * 60 * 60 * 1000);
+      
+      // Establecer cookie con el token
+      document.cookie = `XSRF-TOKEN=${token}; expires=${expiresDate.toUTCString()}; path=/; SameSite=Lax`;
+      console.log('Token CSRF restaurado a cookie');
+    } catch (e) {
+      console.error('Error al restaurar token CSRF a cookie:', e);
+    }
+  }
+
   refreshCsrfToken(): Observable<any> {
     this.csrfTokenInitialized = false;
     return this.initCsrfToken();
   }
 
-  // Método revisado para login - sin reintentos automáticos
+  // Método revisado para login
   login(email: string, password: string): Observable<AuthResponse> {
     console.log('Iniciando proceso de login para:', email);
     
@@ -176,6 +266,19 @@ export class AuthService {
             name: response.user.name,
             email: response.user.email
           }));
+          
+          // Guardar timestamp de autenticación
+          this.authTimestamp = Date.now();
+          localStorage.setItem('auth_timestamp', this.authTimestamp.toString());
+          
+          // Guardar también el token CSRF actual
+          const csrfToken = this.getXsrfTokenFromCookie();
+          if (csrfToken) {
+            localStorage.setItem('XSRF_TOKEN', csrfToken);
+          }
+          
+          // Configurar renovación automática de token
+          this.setupAutoRefresh();
         }
         
         // Actualizar el BehaviorSubject con el usuario actual
@@ -222,7 +325,26 @@ export class AuthService {
     );
   }
 
+  // Método para restaurar el estado de autenticación
+  restoreAuthState(user: User, token: string): void {
+    this.currentUserSubject.next(user);
+    
+    // Restaurar token CSRF si es necesario
+    const xsrfToken = localStorage.getItem('XSRF_TOKEN');
+    if (xsrfToken && !this.getXsrfTokenFromCookie()) {
+      this.restoreTokenToCookie(xsrfToken);
+    }
+    
+    // Configurar renovación automática
+    this.setupAutoRefresh();
+    
+    console.log('Estado de autenticación restaurado para:', user.email);
+  }
+
   logout(): Observable<any> {
+    // Detener renovación automática de token
+    this.stopAutoRefresh();
+    
     // Obtener token DIRECTAMENTE de las cookies
     const token = this.getXsrfTokenFromCookie();
     
@@ -246,14 +368,20 @@ export class AuthService {
   }
 
   public clearAuthData(): void {
+    // Detener renovación automática de token
+    this.stopAutoRefresh();
+    
     if (this.isBrowser) {
       localStorage.removeItem('access_token');
       localStorage.removeItem('user');
       localStorage.removeItem('XSRF_TOKEN');
+      localStorage.removeItem('auth_timestamp');
       // Usar el servicio de gestión de cookies para limpiar cookies
       this.cookieManager.cleanAllCookies();
     }
+    
     this.csrfTokenInitialized = false;
+    this.authTimestamp = null;
     this.currentUserSubject.next(null);
     this.router.navigate(['/login']);
   }
@@ -263,14 +391,23 @@ export class AuthService {
       return throwError(() => new Error('No autenticado'));
     }
     
-    // Obtener token DIRECTAMENTE de las cookies
-    const token = this.getXsrfTokenFromCookie();
-    
-    const headers = new HttpHeaders({
+    // Añadir token de autorización también
+    let headers = new HttpHeaders({
       'X-Requested-With': 'XMLHttpRequest',
-      'Accept': 'application/json',
-      ...(token ? { 'X-XSRF-TOKEN': token } : {})
+      'Accept': 'application/json'
     });
+    
+    // Añadir token CSRF si existe
+    const csrfToken = this.getXsrfTokenFromCookie();
+    if (csrfToken) {
+      headers = headers.set('X-XSRF-TOKEN', csrfToken);
+    }
+    
+    // Añadir token de autorización si existe
+    const authToken = this.token;
+    if (authToken) {
+      headers = headers.set('Authorization', `Bearer ${authToken}`);
+    }
     
     return this.http.get<User>(
       `${this.apiUrl}/user`,
@@ -294,7 +431,7 @@ export class AuthService {
         } else if (error.status === 431) {
           // Error específico de encabezados demasiado grandes
           console.error('Error 431: Headers demasiado grandes - Limpiando cookies');
-          this.cookieManager.cleanNonEssentialCookies(); // Cambio a cleanNonEssentialCookies
+          this.cookieManager.cleanNonEssentialCookies();
           // NO reintentar automáticamente
           return throwError(() => ({
             status: error.status,

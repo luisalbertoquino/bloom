@@ -1,3 +1,4 @@
+// Mejoras en CookieManagerService
 import { Injectable, Inject, PLATFORM_ID } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 
@@ -11,26 +12,46 @@ export class CookieManagerService {
     'bloom_session',
     'access_token'
   ];
-  private readonly MAX_COOKIES = 15;
-  private readonly MAX_ROUTE_COOKIES = 3;
+  private readonly MAX_COOKIES = 20; // Aumentar el límite
+  private readonly MAX_ROUTE_COOKIES = 5; // Aumentar el límite
   private readonly isBrowser: boolean;
   private readonly TOKEN_KEY = 'XSRF_TOKEN';
 
   constructor(@Inject(PLATFORM_ID) private platformId: Object) {
     this.isBrowser = isPlatformBrowser(this.platformId);
     if (this.isBrowser) {
-      setInterval(() => this.checkCookieCount(), 30000);
+      // Reducir la frecuencia de limpieza
+      setInterval(() => this.checkCookieCount(), 60000);
       this.checkCookieCount();
     }
   }
 
   // Token handling
   getToken(): string | null {
-    return this.isBrowser ? this.getTokenFromCookie() || localStorage.getItem(this.TOKEN_KEY) : null;
+    if (!this.isBrowser) return null;
+    
+    // Priorizar la cookie, pero usar localStorage como respaldo
+    const cookieToken = this.getTokenFromCookie();
+    const localToken = localStorage.getItem(this.TOKEN_KEY);
+    
+    // Si tenemos token en cookie, actualizamos localStorage
+    if (cookieToken && cookieToken.length > 20) {
+      localStorage.setItem(this.TOKEN_KEY, cookieToken);
+      return cookieToken;
+    }
+    
+    // Si tenemos token en localStorage pero no en cookie, intentar restaurar
+    if (localToken && localToken.length > 20 && !cookieToken) {
+      console.log('Restaurando token CSRF desde localStorage');
+      document.cookie = `XSRF-TOKEN=${localToken}; path=/; max-age=7200`;
+      return localToken;
+    }
+    
+    return cookieToken || localToken;
   }
 
   saveToken(token: string): void {
-    if (this.isBrowser) localStorage.setItem(this.TOKEN_KEY, token);
+    if (this.isBrowser && token) localStorage.setItem(this.TOKEN_KEY, token);
   }
 
   clearToken(): void {
@@ -41,11 +62,20 @@ export class CookieManagerService {
   cleanRouteCookies(keepLatest: number = 0): void {
     if (!this.isBrowser) return;
     
+    // Identificar solo cookies de ruta específicas
     const routeCookies = this.getRouteCookies();
-    if (routeCookies.length <= keepLatest) return;
     
+    // Ser menos agresivo, solo eliminar si hay muchas
+    if (routeCookies.length <= Math.max(keepLatest, 5)) return;
+    
+    // Preservar las cookies más recientes
     routeCookies.slice(0, routeCookies.length - keepLatest)
-      .forEach(cookie => this.deleteCookie(cookie.name));
+      .forEach(cookie => {
+        // No eliminar cookies esenciales
+        if (!this.isEssentialCookie(cookie.name)) {
+          this.deleteCookie(cookie.name);
+        }
+      });
   }
 
   cleanAllCookies(): void {
@@ -56,13 +86,19 @@ export class CookieManagerService {
     if (token) this.saveToken(token);
   }
 
-  // Helper methods
+  // Helper methods - mejorado
   private getTokenFromCookie(): string | null {
     try {
-      const match = document.cookie.match(/XSRF-TOKEN=([^;]+)/);
-      return match ? decodeURIComponent(match[1]) : null;
+      const cookies = document.cookie.split(';');
+      for (const cookie of cookies) {
+        const parts = cookie.trim().split('=');
+        if (parts.length > 1 && parts[0] === 'XSRF-TOKEN') {
+          return decodeURIComponent(parts[1]);
+        }
+      }
+      return null;
     } catch (e) {
-      console.warn('Error getting CSRF token:', e);
+      console.warn('Error al obtener token CSRF de cookie:', e);
       return null;
     }
   }
@@ -80,27 +116,42 @@ export class CookieManagerService {
     const cookies = document.cookie.split(';').filter(c => c.trim());
     const routeCookies = this.getRouteCookies();
     
-    if (cookies.length > this.MAX_COOKIES || routeCookies.length > this.MAX_ROUTE_COOKIES) {
+    // Solo limpiar si superamos ampliamente los límites
+    if (cookies.length > this.MAX_COOKIES + 5 || 
+        routeCookies.length > this.MAX_ROUTE_COOKIES + 2) {
+      console.log('Limpiando cookies excesivas:', cookies.length);
       this.cleanRouteCookies(this.MAX_ROUTE_COOKIES);
     }
   }
 
   cleanNonEssentialCookies(): void {
-    document.cookie.split(';').forEach(cookie => {
+    const allCookies = document.cookie.split(';');
+    
+    // Salvaguardar tokens importantes
+    const xsrfToken = this.getTokenFromCookie();
+    
+    allCookies.forEach(cookie => {
       const [name] = cookie.trim().split('=');
       if (name && !this.isEssentialCookie(name)) {
         this.deleteCookie(name);
       }
     });
+    
+    // Restaurar tokens importantes
+    if (xsrfToken) this.saveToken(xsrfToken);
   }
 
   private isEssentialCookie(name: string): boolean {
     return this.ESSENTIAL_COOKIES.includes(name) || 
            name.startsWith('laravel_') || 
-           name.startsWith('bloom_');
+           name.startsWith('bloom_') ||
+           name === 'XSRF-TOKEN';
   }
 
   private deleteCookie(name: string): void {
+    // Evitar borrar cookies esenciales
+    if (this.isEssentialCookie(name)) return;
+    
     const domains = [window.location.hostname, 'localhost'];
     const paths = ['/', '/admin', '/api'];
     

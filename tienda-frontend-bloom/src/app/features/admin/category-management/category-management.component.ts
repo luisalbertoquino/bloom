@@ -45,6 +45,21 @@ export class CategoryManagementComponent implements OnInit {
   ngOnInit(): void {
     this.initForm();
     this.loadCategories();
+    
+    // Escuchar evento de sesión expirada
+    window.addEventListener('session-expired', (event: any) => {
+      // Mostrar mensaje al usuario
+      this.errorMessage = event.detail.message || 'Tu sesión ha expirado. Serás redirigido al login.';
+      
+      // Dar tiempo para que se muestre el mensaje
+      setTimeout(() => {
+        this.authService.clearAuthData();
+      }, 3000);
+    });
+  }
+
+  ngOnDestroy(): void {
+    window.removeEventListener('session-expired', () => {});
   }
 
   initForm(): void {
@@ -173,28 +188,31 @@ export class CategoryManagementComponent implements OnInit {
   } 
    
   // Nuevo método para refrescar CSRF y enviar datos
+  // Reemplaza el método refreshCsrfAndSubmit en category-management.component.ts
   refreshCsrfAndSubmit(formData: FormData): void {
-    if (this.isEditing && this.currentCategoryId) {
-      // Usar el método updateCategory modificado
-      this.categoryService.updateCategory(this.currentCategoryId, formData).subscribe({
-        next: (category) => {
-          this.handleSuccess('Categoría actualizada correctamente.');
-        },
-        error: (error) => {
-          this.handleError(error);
+    // Mostrar mensaje al usuario de que se está procesando
+    this.successMessage = 'Procesando, por favor espera...';
+    
+    // Refrescar token CSRF primero y luego enviar datos
+    this.authService.refreshCsrfToken().pipe(
+      switchMap(() => {
+        // Ahora procesa según sea creación o actualización
+        if (this.isEditing && this.currentCategoryId) {
+          return this.categoryService.updateCategory(this.currentCategoryId, formData);
+        } else {
+          return this.categoryService.createCategory(formData);
         }
-      });
-    } else {
-      // Usar el método createCategory modificado
-      this.categoryService.createCategory(formData).subscribe({
-        next: (category) => {
-          this.handleSuccess('Categoría creada correctamente.');
-        },
-        error: (error) => {
-          this.handleError(error);
-        }
-      });
-    }
+      })
+    ).subscribe({
+      next: (category) => {
+        this.handleSuccess(this.isEditing ? 
+          'Categoría actualizada correctamente.' : 
+          'Categoría creada correctamente.');
+      },
+      error: (error) => {
+        this.handleError(error);
+      }
+    });
   }
 
 

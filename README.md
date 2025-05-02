@@ -1,6 +1,5 @@
-# Bloom Accesorios - Tienda Online
+# <img src="https://store.invite-art.com/storage/settings/REzRM0ya9yQl7goLaj0vucfRBUeyFRRe9Kq5d3W0.png" alt="Bloom Accesorios Logo" width="50"> Bloom Accesorios - Tienda Online 
 
-![Bloom Accesorios Logo](/assets/images/logo.png)
 
 ## 📝 Descripción
 

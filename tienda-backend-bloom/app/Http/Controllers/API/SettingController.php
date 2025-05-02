@@ -24,10 +24,11 @@ class SettingController extends Controller
             'whatsapp_number' => 'required|string|max:20',
             'banner_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'logo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'favicon' => 'nullable|image|mimes:jpeg,png,jpg,gif,ico|max:2048',
         ]);
 
         // Guardar cada configuración
-        foreach ($request->except(['banner_image', 'logo', '_token']) as $key => $value) {
+        foreach ($request->except(['banner_image', 'logo', 'favicon', '_token']) as $key => $value) {
             Setting::updateOrCreate(
                 ['key' => $key],
                 ['value' => $value]
@@ -68,7 +69,28 @@ class SettingController extends Controller
             );
         }
 
-        return response()->json(['message' => 'Configuraciones guardadas con éxito']);
+        // Manejar el favicon
+        if ($request->hasFile('favicon')) {
+            $faviconSetting = Setting::where('key', 'favicon')->first();
+            
+            // Eliminar imagen anterior si existe
+            if ($faviconSetting && $faviconSetting->value) {
+                Storage::disk('public')->delete($faviconSetting->value);
+            }
+            
+            $path = $request->file('favicon')->store('settings', 'public');
+            
+            Setting::updateOrCreate(
+                ['key' => 'favicon'],
+                ['value' => $path]
+            );
+        }
+
+        $updatedSettings = Setting::all()->pluck('value', 'key');
+        return response()->json([
+            'message' => 'Configuraciones guardadas con éxito',
+            'settings' => $updatedSettings
+        ]);
     }
 
     public function show($key)

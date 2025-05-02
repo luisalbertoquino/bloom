@@ -252,25 +252,29 @@ export class SettingsComponent implements OnInit {
       formData.append('favicon', this.selectedFaviconFile);
     }
   
-    // Usar el patrón simple como en el componente de categorías
     this.settingsService.updateSettings(formData).subscribe({
       next: (response) => {
         this.isSubmitting = false;
         this.successMessage = 'Configuración actualizada correctamente.';
         
-        // Actualizar el tema inmediatamente sin necesidad de recargar
-        this.themeService.initializeTheme();
+        // Crear un objeto con los nuevos valores para el tema
+        const updatedTheme = {
+          primary_color: this.settingsForm.get('primary_color')?.value,
+          secondary_color: this.settingsForm.get('secondary_color')?.value
+        };
         
-        // Recargar los settings para mostrar los cambios actualizados
-        this.loadSettings();
+        // Aplicar el tema inmediatamente
+        this.themeService.applyTheme(updatedTheme);
         
         // Ocultar el mensaje después de unos segundos
         setTimeout(() => {
           this.successMessage = '';
         }, 5000);
         
-        // Eliminar las variables que ya no son necesarias
-        this.showUpdateConfirmation = false; // No usaremos este diálogo
+        this.showUpdateConfirmation = false;
+        
+        // Actualizar datos locales
+        this.currentSettings = this.settingsService.getCachedSettings();
       },
       error: (error) => {
         this.handleError(error);

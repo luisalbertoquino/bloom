@@ -1,4 +1,4 @@
-// En app.component.ts
+// src/app/app.component.ts
 import { Component, OnInit, OnDestroy, PLATFORM_ID, Inject } from '@angular/core';
 import { AuthService } from './core/services/auth.service';
 import { Router, NavigationEnd, RouterOutlet } from '@angular/router';
@@ -8,6 +8,7 @@ import { CommonModule } from '@angular/common';
 import { isPlatformBrowser } from '@angular/common';
 import { AuthStateService } from './core/services/auth-state.service';
 import { AppLoaderComponent } from '../app/shared/components/app-loader/app-loader.component';
+import { ThemeService } from './core/services/theme.service';
 
 @Component({
   selector: 'app-root',
@@ -26,7 +27,8 @@ export class AppComponent implements OnInit, OnDestroy {
     private authService: AuthService,
     private router: Router,
     @Inject(PLATFORM_ID) private platformId: any,
-    private authStateService: AuthStateService
+    private authStateService: AuthStateService,
+    private themeService: ThemeService
   ) {
     this.isBrowser = isPlatformBrowser(this.platformId);
     this.authCheckCompleted$ = this.authStateService.authCheckCompleted$; // Inicializa después de que el servicio exista
@@ -35,6 +37,9 @@ export class AppComponent implements OnInit, OnDestroy {
   ngOnInit() {
     // Solo ejecutar código del lado del cliente si estamos en el navegador
     if (this.isBrowser) {
+      // Inicializar tema desde la configuración de la BD
+      this.themeService.initializeTheme();
+      
       // Verificar si hay una sesión guardada
       this.checkStoredSession();
       

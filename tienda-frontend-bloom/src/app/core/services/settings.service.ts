@@ -22,6 +22,7 @@ export class SettingsService {
     whatsapp_number: '+1234567890'
   };
   private isBrowser: boolean;
+  private cachedSettings: any = {};
 
   constructor(
     private httpBase: HttpBaseService,
@@ -38,6 +39,7 @@ export class SettingsService {
     // Si ya está en caché, usamos eso
     const cachedSettings = this.cacheService.get('settings');
     if (cachedSettings) {
+      this.cachedSettings = cachedSettings;
       return of(cachedSettings);
     }
     
@@ -50,6 +52,7 @@ export class SettingsService {
     
     return this.httpBase.get<any>(`${this.apiUrl}/settings`).pipe(
       tap(settings => {
+        this.cachedSettings = settings;
         this.cacheService.set('settings', settings, 5 * 60 * 1000);
         this.isLoading = false;
       }),
@@ -74,6 +77,15 @@ export class SettingsService {
     );
   }
 
+  // Método para obtener la configuración en caché
+  getCachedSettings(): any {
+    const cachedSettings = this.cacheService.get('settings');
+    if (cachedSettings) {
+      return cachedSettings;
+    }
+    return this.cachedSettings || this.fallbackSettings;
+  }
+
   // Obtener una configuración específica (no usa caché)
   getSetting(key: string): Observable<any> {
     return this.httpBase.get<any>(`${this.apiUrl}/settings/${key}`).pipe(
@@ -85,13 +97,36 @@ export class SettingsService {
   }
 
   // Solo para administradores (actualiza configuración y limpia caché)
-  // IMPORTANTE: Usamos el mismo patrón que en CategoryService
   updateSettings(formData: FormData): Observable<any> {
     // Usar httpBase directamente, como en CategoryService
     return this.httpBase.post<any>(`${this.apiUrl}/settings`, formData).pipe(
-      tap(() => {
-        // Limpiar caché después de actualizar
-        this.cacheService.clear('settings');
+      tap(response => {
+        // Actualizar caché con los nuevos valores
+        const updatedSettings = {...this.getCachedSettings()};
+        
+        // Actualizar valores en la caché
+        for (const key of [
+          'site_title', 'primary_color', 'secondary_color', 'footer_text', 
+          'address', 'phone', 'email', 'facebook', 'instagram', 
+          'twitter', 'youtube', 'whatsapp_number'
+        ]) {
+          if (formData.has(key)) {
+            updatedSettings[key] = formData.get(key);
+          }
+        }
+        
+        // Si el backend devuelve rutas de archivos, actualizar esos valores también
+        if (response && typeof response === 'object') {
+          for (const key of ['logo', 'banner_image', 'favicon']) {
+            if (response[key]) {
+              updatedSettings[key] = response[key];
+            }
+          }
+        }
+        
+        // Guardar configuración actualizada en caché
+        this.cachedSettings = updatedSettings;
+        this.cacheService.set('settings', updatedSettings, 5 * 60 * 1000);
       }),
       catchError(error => {
         console.error('Error al actualizar configuraciones:', error);

@@ -9,6 +9,7 @@ import { isPlatformBrowser } from '@angular/common';
 import { AuthStateService } from './core/services/auth-state.service';
 import { AppLoaderComponent } from '../app/shared/components/app-loader/app-loader.component';
 import { ThemeService } from './core/services/theme.service';
+import { SettingsService } from './core/services/settings.service';
 
 @Component({
   selector: 'app-root',
@@ -28,10 +29,11 @@ export class AppComponent implements OnInit, OnDestroy {
     private router: Router,
     @Inject(PLATFORM_ID) private platformId: any,
     private authStateService: AuthStateService,
-    private themeService: ThemeService
+    private themeService: ThemeService,
+    private settingsService: SettingsService  // Añadir esta línea
   ) {
     this.isBrowser = isPlatformBrowser(this.platformId);
-    this.authCheckCompleted$ = this.authStateService.authCheckCompleted$; // Inicializa después de que el servicio exista
+    this.authCheckCompleted$ = this.authStateService.authCheckCompleted$;
   }
 
   ngOnInit() {
@@ -39,6 +41,13 @@ export class AppComponent implements OnInit, OnDestroy {
     if (this.isBrowser) {
       // Inicializar tema desde la configuración de la BD
       this.themeService.initializeTheme();
+
+      // Cargar el favicon desde la configuración
+      this.settingsService.getSettings().subscribe(settings => {
+        if (settings.favicon) {
+          this.settingsService.setFavicon(settings.favicon);
+        }
+      });
       
       // Verificar si hay una sesión guardada
       this.checkStoredSession();

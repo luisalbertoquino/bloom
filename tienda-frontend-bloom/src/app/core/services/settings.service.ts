@@ -144,15 +144,24 @@ export class SettingsService {
 
   // Configurar el favicon del sitio
   setFavicon(faviconPath: string): void {
-    // Verificar si estamos en un navegador y existe una ruta de favicon
     if (!this.isBrowser || !faviconPath) return;
     
     try {
-      const link: HTMLLinkElement = document.querySelector("link[rel*='icon']") || document.createElement('link');
+      // Remover favicon existente para asegurar que se actualice
+      const existingLink = document.querySelector("link[rel*='icon']");
+      if (existingLink) {
+        existingLink.remove();
+      }
+      
+      // Crear nuevo link con timestamp para evitar caché
+      const link = document.createElement('link');
       link.type = 'image/x-icon';
       link.rel = 'shortcut icon';
-      link.href = `${environment.storageUrl}${faviconPath}`;
+      // Añadir timestamp para evitar caché
+      link.href = `${environment.storageUrl}${faviconPath}?t=${new Date().getTime()}`;
       document.getElementsByTagName('head')[0].appendChild(link);
+      
+      console.log('Favicon actualizado:', link.href);
     } catch (error) {
       console.error('Error al configurar el favicon:', error);
     }

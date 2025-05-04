@@ -1,57 +1,61 @@
-// navbar.component.scss
 :host {
-    display: block;
-    
-    // Asegurarse de que el fondo del navbar sea del color primary
-    nav {
-      background-color: var(--color-primary);
+  display: block;
+  
+  nav {
+    background-color: var(--color-primary);
+  }
+  
+  .fixed.inset-0.bg-black.bg-opacity-60 {
+    background-color: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+  }
+  
+  .fixed.top-0.left-0.h-full.w-64 {
+    background-color: var(--color-primary);
+    transform: translateX(0);
+  }
+  
+  /* Elimina o modifica estas reglas que podrían estar interfiriendo */
+  /*
+  .hover\:text-primary:hover {
+    color: var(--color-primary);
+  }
+  
+  .hover\:text-white:hover {
+    color: white;
+  }
+  */
+  
+  /* Añade esto específicamente para el menú de usuario */
+  [class*="user-menu"] {
+    .hover\:bg-primary:hover {
+      background-color: var(--color-primary) !important;
     }
     
-    // Actualizado para el overlay con opacidad 60% y efecto de blur
-    .fixed.inset-0.bg-black.bg-opacity-60 {
-      background-color: rgba(0, 0, 0, 0.6);
-      backdrop-filter: blur(4px);
-    }
-    
-    // Asegurarse de que el sidebar tenga el color PRIMARY (invertido)
-    .fixed.top-0.left-0.h-full.w-64 {
-      background-color: var(--color-primary);
-      // Evitar que el sidebar desaparezca
-      transform: translateX(0);
-    }
-    
-    // Color de texto secondary para los elementos del sidebar (invertido)
-    .text-secondary {
-      color: var(--color-secondary);
-    }
-    
-    // Para el hover del botón de cerrar
-    .hover\:text-secondary-dark:hover {
-      color: var(--color-secondary-dark, var(--color-secondary));
-    }
-    
-    // Efecto hover con color primary (mantiene consistencia con el navbar)
-    .hover\:text-primary:hover {
-      color: var(--color-primary);
-    }
-    
-    // Para el hover de los items del sidebar
     .hover\:text-white:hover {
-      color: white;
+      color: white !important;
     }
-    
-    // Para las líneas divisorias (ahora secondary)
-    .border-secondary {
-      border-color: var(--color-secondary);
-    }
-    
-    // Para los elementos del menú
-    .text-lg {
-      font-size: 1.125rem;
-      line-height: 1.75rem;
-    }
-    
-    .font-medium {
-      font-weight: 500;
-    }
+  }
+  
+  /* Resto de tus estilos... */
+  .text-secondary {
+    color: var(--color-secondary);
+  }
+  
+  .hover\:text-secondary-dark:hover {
+    color: var(--color-secondary-dark, var(--color-secondary));
+  }
+  
+  .border-secondary {
+    border-color: var(--color-secondary);
+  }
+  
+  .text-lg {
+    font-size: 1.125rem;
+    line-height: 1.75rem;
+  }
+  
+  .font-medium {
+    font-weight: 500;
+  }
 }

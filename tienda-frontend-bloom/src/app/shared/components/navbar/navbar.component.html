@@ -41,18 +41,21 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
           </svg>
         </button>
-        <!-- Menú de usuario -->
-        <div *ngIf="isAuthenticated && isUserMenuOpen" 
-             class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-10">
-          <a [routerLink]="['/admin']" class="block px-4 py-2 text-sm text-gray-700 hover:bg-secondary hover:text-white">
-            Panel de administración
-          </a>
-          <a [routerLink]="['/perfil']" class="block px-4 py-2 text-sm text-gray-700 hover:bg-secondary hover:text-white">
-            Mi perfil
-          </a>
-          <button (click)="logout()" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-secondary hover:text-white">
-            Cerrar sesión
-          </button>
+          <!-- Menú de usuario -->
+          <div *ngIf="isAuthenticated && isUserMenuOpen" 
+            class="user-menu absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-10 transition-all duration-200 ease-in-out">
+            <a [routerLink]="['/admin']" 
+              class="block px-4 py-2 text-sm text-gray-700 hover:bg-primary hover:text-white transition-colors duration-200 ease-in-out">
+                Panel de administración
+            </a>
+            <a [routerLink]="['/perfil']" 
+              class="block px-4 py-2 text-sm text-gray-700 hover:bg-primary hover:text-white transition-colors duration-200 ease-in-out">
+                Mi perfil
+            </a>
+            <button (click)="logout()" 
+                    class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-primary hover:text-white transition-colors duration-200 ease-in-out">
+                Cerrar sesión
+            </button>
         </div>
       </div>
       

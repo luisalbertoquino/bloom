@@ -2,43 +2,87 @@
 
 // Estilo para la barra lateral
 aside {
-    min-height: 100vh;
-    transition: width 0.3s ease;
-  }
+  min-height: 100vh;
+  transition: width 0.3s ease;
   
-  // Estilo para los elementos activos en el menú lateral
-  .router-link-active {
+  // Asegurar que los menús desplegables no se vean afectados
+  .user-menu, [class*="dropdown"] {
+    .hover\:bg-primary:hover {
+      background-color: var(--color-primary) !important;
+    }
+    .hover\:text-white:hover {
+      color: white !important;
+    }
+  }
+}
+
+// Estilo específico solo para links activos del sidebar (no afecta otros menús)
+aside .router-link-active {
+  background-color: var(--color-primary);
+  color: white;
+  
+  // Evitar que afecte otros elementos
+  &:not(.user-menu):not([class*="dropdown"]) {
     background-color: var(--color-primary);
     color: white;
   }
+}
+
+// Transiciones (ajustado para no sobrescribir las de Tailwind)
+.transition-all:not(.user-menu):not([class*="dropdown"]) {
+  transition-property: all;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 300ms;
+}
+
+// Estilos de scroll (seguros, no afectan menús)
+.overflow-y-auto:not(.user-menu):not([class*="dropdown"]) {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(156, 163, 175, 0.5) rgba(243, 244, 246, 0.1);
   
-  // Animar transiciones del menú
-  .transition-all {
-    transition-property: all;
-    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-    transition-duration: 300ms;
-  }
-  
-  // Para que el contenido principal ocupe todo el espacio disponible
-  .flex-1 {
-    flex: 1 1 0%;
-  }
-  
-  // Estilo para scroll interno
-  .overflow-y-auto {
-    scrollbar-width: thin;
-    scrollbar-color: rgba(156, 163, 175, 0.5) rgba(243, 244, 246, 0.1);
-  }
-  
-  .overflow-y-auto::-webkit-scrollbar {
+  &::-webkit-scrollbar {
     width: 5px;
   }
   
-  .overflow-y-auto::-webkit-scrollbar-track {
+  &::-webkit-scrollbar-track {
     background: rgba(243, 244, 246, 0.1);
   }
   
-  .overflow-y-auto::-webkit-scrollbar-thumb {
+  &::-webkit-scrollbar-thumb {
     background-color: rgba(156, 163, 175, 0.5);
     border-radius: 20px;
   }
+}
+
+// Clase utilitaria segura
+.flex-1 {
+  flex: 1 1 0%;
+}
+
+// Regla para asegurar que los menús desplegables tengan prioridad
+.user-menu, [class*="dropdown"] {
+  z-index: 1000;
+  
+  * {
+    transition: none !important;
+  }
+}
+
+.user-dropdown {
+  // Asegura que los estilos hover se apliquen
+  a, button {
+    &:hover {
+      background-color: var(--color-primary) !important;
+      color: white !important;
+    }
+  }
+  
+  // Resetea cualquier estilo que pueda estar interfiriendo
+  .hover\:bg-primary:hover {
+    background-color: var(--color-primary) !important;
+  }
+  
+  .hover\:text-white:hover {
+    color: white !important;
+  }
+}

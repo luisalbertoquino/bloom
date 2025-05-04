@@ -101,16 +101,20 @@
               </svg>
             </button>
             <!-- Menú desplegable que aparece cuando clickeas en el botón -->
-            <div *ngIf="isUserMenuOpen" class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-10">
-              <a [routerLink]="['/admin']" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                Panel de administración
-              </a>
-              <a [routerLink]="['/perfil']" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                Mi perfil
-              </a>
-              <button (click)="logout()" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                Cerrar sesión
-              </button>
+              <div *ngIf="isUserMenuOpen" 
+                  class="user-dropdown absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50 transition-all duration-200 ease-in-out">
+                <a [routerLink]="['/admin']" 
+                    class="block px-4 py-2 text-sm text-gray-700 hover:!bg-primary hover:!text-white transition-colors duration-200 ease-in-out">
+                    Panel de administración
+                </a>
+                <a [routerLink]="['/perfil']" 
+                    class="block px-4 py-2 text-sm text-gray-700 hover:!bg-primary hover:!text-white transition-colors duration-200 ease-in-out">
+                    Mi perfil
+                </a>
+                <button (click)="logout()" 
+                        class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:!bg-primary hover:!text-white transition-colors duration-200 ease-in-out">
+                    Cerrar sesión
+                </button>
             </div>
           </div>
         </div>

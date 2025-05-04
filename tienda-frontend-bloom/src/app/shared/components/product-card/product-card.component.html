@@ -1,7 +1,9 @@
 <div class="bg-white rounded-lg shadow-md overflow-hidden group">
-  <div class="relative">
+  <!-- Contenedor cuadrado responsivo -->
+  <div class="relative aspect-square">
+    <!-- Imagen cuadrada que cubre todo el espacio -->
     <img [src]="getImageUrl(product.main_image)" [alt]="product.name" 
-         class="w-full h-48 object-cover transition-transform duration-300 group-hover:scale-105">
+         class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105">
 
     <!-- Overlay con botones para ESCRITORIO/TABLET (visible solo con hover) -->
     <div class="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent hidden md:flex items-center justify-center 
@@ -65,6 +67,7 @@
     </div>
   </div>
   
+  <!-- Contenido inferior del card -->
   <div class="p-4">
     <a [routerLink]="['/productos', product.id]" class="block">
       <h3 class="font-bold text-lg mb-1 text-gray-800 hover:text-primary transition-colors">

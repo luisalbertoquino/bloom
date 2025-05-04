@@ -8,6 +8,8 @@ import { BlogService, BlogPost } from '../../../core/services/blog.service';
 import { environment } from '../../../../environments/environment';
 import { CookieManagerService } from '../../../core/services/cookie-manager.service';
 
+import { WhatsappButtonComponent } from '../../../shared/components/whatsapp-button/whatsapp-button.component';
+
 @Component({
   selector: 'app-blog-list',
   templateUrl: './blog-list.component.html',
@@ -17,7 +19,8 @@ import { CookieManagerService } from '../../../core/services/cookie-manager.serv
     CommonModule,
     RouterModule,
     NavbarComponent,
-    FooterComponent
+    FooterComponent,
+    WhatsappButtonComponent
   ]
 })
 export class BlogListComponent implements OnInit {

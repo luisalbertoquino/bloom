@@ -1,13 +1,100 @@
 <!doctype html>
-<html lang="en">
+<html lang="es">
 <head>
   <meta charset="utf-8">
   <title>TiendaFrontendBloom</title>
   <base href="/">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="icon" type="image/x-icon" href="favicon.ico">
+  
+  <!-- Estilos para el loader inicial estilo diamante con colores pastel -->
+  <style>
+    .app-initial-loader {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: #F3F4F6;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+      transition: opacity 0.3s ease-out;
+    }
+    
+    .app-initial-loader.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+    
+    .diamond-loader {
+      position: relative;
+      width: 64px;
+      height: 64px;
+      background-color: #860922;
+      transform: rotate(45deg);
+      overflow: hidden;
+    }
+    
+    .diamond-loader:after {
+      content: '';
+      position: absolute;
+      inset: 8px;
+      margin: auto;
+      background: #f8e2ff; /* Color pastel lila claro */
+    }
+    
+    .diamond-loader:before {
+      content: '';
+      position: absolute;
+      inset: -15px;
+      margin: auto;
+      background: #ffb6c1; /* Color pastel rosa claro */
+      animation: diamondLoader 2s linear infinite;
+    }
+    
+    @keyframes diamondLoader {
+      0%, 10% {
+        transform: translate(-64px, -64px) rotate(-45deg)
+      }
+      90%, 100% {
+        transform: translate(0px, 0px) rotate(-45deg)
+      }
+    }
+    
+    .loader-text {
+      margin-top: 2rem;
+      color: #860922;
+      font-family: Arial, sans-serif;
+      font-size: 1rem;
+    }
+  </style>
 </head>
 <body>
+  <!-- Loader estático inicial con estilo de diamante -->
+  <div id="app-initial-loader" class="app-initial-loader">
+    <div class="diamond-loader"></div>
+    <p class="loader-text">Cargando aplicación...</p>
+  </div>
+  
+  <!-- Componente raíz de Angular -->
   <app-root></app-root>
+  
+  <script>
+    // Función para ocultar el loader inicial
+    function hideInitialLoader() {
+      const loader = document.getElementById('app-initial-loader');
+      if (loader) {
+        loader.classList.add('hidden');
+        setTimeout(() => {
+          if (loader.parentNode) {
+            loader.parentNode.removeChild(loader);
+          }
+        }, 300); // Tiempo para la transición
+      }
+    }
+  </script>
 </body>
 </html>

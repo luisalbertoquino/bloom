@@ -8,6 +8,8 @@ import { BlogService, BlogPost } from '../../../core/services/blog.service';
 import { environment } from '../../../../environments/environment';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 
+import { WhatsappButtonComponent } from '../../../shared/components/whatsapp-button/whatsapp-button.component';
+
 @Component({
   selector: 'app-blog-detail',
   templateUrl: './blog-detail.component.html',
@@ -17,7 +19,8 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
     CommonModule,
     RouterModule, 
     NavbarComponent,
-    FooterComponent
+    FooterComponent,
+    WhatsappButtonComponent
   ]
 })
 export class BlogDetailComponent implements OnInit {

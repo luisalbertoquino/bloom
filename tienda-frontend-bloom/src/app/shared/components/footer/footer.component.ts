@@ -3,6 +3,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { SettingsService } from '../../../core/services/settings.service';
+import { environment } from '../../../../environments/environment';
 
 @Component({
   selector: 'app-footer',
@@ -18,6 +19,7 @@ export class FooterComponent implements OnInit {
   phone = '(123) 456-7890';
   email = 'info@bloomaccesorios.com';
   currentYear = new Date().getFullYear();
+  logoUrl = '/assets/images/logo.png';
   
   // Redes sociales
   facebook: string | null = null;
@@ -49,6 +51,12 @@ export class FooterComponent implements OnInit {
         }
         if (settings.email) {
           this.email = settings.email;
+        }
+        
+        // Cargar la URL del logo
+        if (settings.logo) {
+          // Construir la URL completa de la imagen
+          this.logoUrl = environment.storageUrl + settings.logo;
         }
         
         // Cargar redes sociales

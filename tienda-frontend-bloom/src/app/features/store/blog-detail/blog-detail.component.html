@@ -2,7 +2,7 @@
 <div class="flex flex-col min-h-screen">
   <!-- Navbar -->
   <app-navbar></app-navbar>
-
+ 
   <!-- Estado de carga -->
   <div *ngIf="isLoading" class="flex justify-center items-center py-20 flex-grow">
     <div class="flex flex-col items-center">
@@ -97,6 +97,9 @@
         </div>
       </div>
     </main>
+
+    <!-- Botón de WhatsApp (fuera del contenedor principal para que esté siempre visible) -->
+    <app-whatsapp-button></app-whatsapp-button>
 
     <!-- Footer -->
     <app-footer></app-footer>

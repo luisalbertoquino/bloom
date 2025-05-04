@@ -8,6 +8,8 @@ import { ProductService, Product } from '../../../core/services/product.service'
 import { CartService } from '../../../core/services/cart.service';
 import { environment } from '../../../../environments/environment';
 
+import { WhatsappButtonComponent } from '../../../shared/components/whatsapp-button/whatsapp-button.component';
+
 
 @Component({
   selector: 'app-product-detail',
@@ -19,7 +21,8 @@ import { environment } from '../../../../environments/environment';
     FormsModule,
     RouterModule,
     NavbarComponent,
-    FooterComponent
+    FooterComponent,
+    WhatsappButtonComponent
   ]
 })
 export class ProductDetailComponent implements OnInit {

@@ -1,58 +1,178 @@
 /* Estilos para el slider de categorías en home.component.scss */
 .category-slider-wrapper {
-    position: relative;
-    width: 100%;
-    overflow: hidden;
-    padding: 10px 0;
-  }
-  
-  .category-slider-container {
-    display: flex;
-    flex-wrap: nowrap;
-    width: max-content;
-  }
-  
-  .category-item {
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-    
-    /* Tamaños responsivos */
-    @media (max-width: 640px) {
-      width: 90px;
-      margin-left: 8px;
-      margin-right: 8px;
-    }
-    
-    @media (min-width: 641px) and (max-width: 768px) {
-      width: 100px;
-    }
-    
-    @media (min-width: 769px) {
-      width: 120px;
-    }
-    
-    &:hover {
-      transform: translateY(-5px);
-      z-index: 10;
-    }
-  }
-  
-  /* Animación para resaltar el item al hacer hover */
-  .category-item:hover img {
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-  }
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  padding: 10px 0;
+}
 
-  .category-slider-container {
-    cursor: grab;
-    
-    &:active {
-      cursor: grabbing;
-    }
+.category-slider-container {
+  display: flex;
+  flex-wrap: nowrap;
+  width: max-content;
+  transition: transform 0.3s ease;
+  cursor: grab;
+  
+  &:active {
+    cursor: grabbing;
+  }
+}
+
+.category-item {
+  transition: all 0.3s ease;
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  
+  /* Tamaños responsivos */
+  @media (max-width: 640px) {
+    width: 90px;
+    margin-left: 8px;
+    margin-right: 8px;
   }
   
-  /* Prevenir que se seleccione el texto al arrastrar */
-  .category-item {
-    user-select: none;
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
+  @media (min-width: 641px) and (max-width: 768px) {
+    width: 100px;
   }
+  
+  @media (min-width: 769px) {
+    width: 120px;
+  }
+}
+
+/* Animación para resaltar el item al hacer hover */
+.category-item:hover img {
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+/* Estilos para limitar el número de líneas en textos */
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.line-clamp-3 {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Estilos para las cards de blog */
+.grid > div {
+  backface-visibility: hidden;
+}
+
+/* Transiciones suaves */
+a, button {
+  transition: all 0.3s ease;
+}
+
+/* Efecto de hover mejorado para botones */
+.bg-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+/* Mejorar la apariencia del loader */
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.category-slider-wrapper {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  padding: 10px 0;
+}
+
+.category-slider-container {
+  display: flex;
+  flex-wrap: nowrap;
+  width: max-content;
+  transition: transform 0.3s ease;
+  cursor: grab;
+  
+  &:active {
+    cursor: grabbing;
+  }
+}
+
+.category-item {
+  transition: all 0.3s ease;
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  
+  /* Tamaños responsivos */
+  @media (max-width: 640px) {
+    width: 90px;
+    margin-left: 8px;
+    margin-right: 8px;
+  }
+  
+  @media (min-width: 641px) and (max-width: 768px) {
+    width: 100px;
+  }
+  
+  @media (min-width: 769px) {
+    width: 120px;
+  }
+}
+
+/* Animación para resaltar el item al hacer hover */
+.category-item:hover img {
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+/* Añade estos estilos a tu archivo home.component.scss */
+.blog-slider-outer-container {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+}
+
+.blog-slider-container {
+  width: 100%;
+  overflow: hidden;
+}
+
+.blog-slides-container {
+  display: flex;
+  flex-wrap: nowrap;
+  transition: transform 0.3s ease;
+}
+
+.blog-post-item {
+  flex-shrink: 0;
+  
+  /* Define anchos responsivos explícitos */
+  width: 100%;
+  
+  @media (min-width: 640px) {
+    width: 50%;
+  }
+  
+  @media (min-width: 768px) {
+    width: 33.333%;
+  }
+  
+  @media (min-width: 1024px) {
+    width: 25%;
+  }
+}

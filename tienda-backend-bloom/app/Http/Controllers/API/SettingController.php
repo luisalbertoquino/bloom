@@ -24,7 +24,7 @@ class SettingController extends Controller
             'whatsapp_number' => 'required|string|max:20',
             'banner_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'logo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-            'favicon' => 'nullable|image|mimes:jpeg,png,jpg,gif,ico|max:2048',
+            'favicon' => 'nullable|file|mimes:jpeg,png,jpg,gif,ico|max:2048',
         ]);
 
         // Guardar cada configuración

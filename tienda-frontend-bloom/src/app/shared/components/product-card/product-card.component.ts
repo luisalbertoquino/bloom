@@ -2,7 +2,7 @@ import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 
-@Component({
+@Component({ 
   selector: 'app-product-card',
   standalone: true,
   imports: [CommonModule, RouterModule],

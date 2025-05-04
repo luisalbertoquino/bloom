@@ -1,0 +1,142 @@
+// src/app/shared/components/whatsapp-button/whatsapp-button.component.scss
+
+// Variables principales
+$whatsapp-green: #25d366;
+$whatsapp-dark-green: #128c7e;
+$whatsapp-light-green: #dcf8c6;
+$tooltip-bg: #ffffff;
+$tooltip-text: #333333;
+$shadow-color: rgba(0, 0, 0, 0.2);
+$animation-time: 0.3s;
+
+// Contenedor principal
+.whatsapp-container {
+  position: fixed;
+  bottom: 25px;
+  right: 25px;
+  z-index: 1000;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+// Botón de WhatsApp - Ahora todo verde con icono blanco
+.whatsapp-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: $whatsapp-green;
+  color: white; // Icono en color blanco
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  box-shadow: 0 4px 12px $shadow-color;
+  text-decoration: none;
+  transition: all $animation-time ease;
+  animation: bounce 1s infinite alternate;
+  transform-origin: center bottom;
+  
+  &:hover {
+    background-color: $whatsapp-dark-green;
+    transform: translateY(-5px) scale(1.1);
+    box-shadow: 0 8px 20px $shadow-color;
+    animation-play-state: paused;
+  }
+  
+  // Icono
+  .whatsapp-icon {
+    width: 30px;
+    height: 30px;
+  }
+}
+
+// Tooltip
+.whatsapp-tooltip {
+  position: absolute;
+  bottom: 70px;
+  right: 0;
+  background-color: $tooltip-bg;
+  border-radius: 10px;
+  padding: 15px;
+  width: 250px;
+  box-shadow: 0 5px 25px rgba(0, 0, 0, 0.1);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(20px);
+  transition: all $animation-time ease;
+  
+  &.visible {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+  }
+  
+  // Flecha del tooltip
+  .tooltip-arrow {
+    position: absolute;
+    bottom: -10px;
+    right: 20px;
+    width: 0;
+    height: 0;
+    border-left: 10px solid transparent;
+    border-right: 10px solid transparent;
+    border-top: 10px solid $tooltip-bg;
+  }
+  
+  // Encabezado del tooltip
+  .tooltip-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+    
+    .tooltip-icon {
+      font-size: 20px;
+    }
+    
+    .tooltip-title {
+      font-weight: bold;
+      font-size: 16px;
+      color: $whatsapp-dark-green;
+    }
+  }
+  
+  // Contenido del tooltip
+  .tooltip-content {
+    font-size: 14px;
+    line-height: 1.4;
+    color: $tooltip-text;
+  }
+}
+
+// Animaciones
+@keyframes bounce {
+  0% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba($whatsapp-green, 0.5);
+  }
+  70% {
+    box-shadow: 0 0 0 15px rgba($whatsapp-green, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba($whatsapp-green, 0);
+  }
+}
+
+// Adaptación para pantallas más pequeñas
+@media (max-width: 768px) {
+  .whatsapp-tooltip {
+    width: 220px;
+    right: -20px;
+    
+    .tooltip-arrow {
+      right: 30px;
+    }
+  }
+}

@@ -11,6 +11,8 @@ import { CartService } from '../../../core/services/cart.service';
 import { environment } from '../../../../environments/environment';
 import { ProductQuickViewComponent } from '../product-quick-view/product-quick-view.component';
 
+import { WhatsappButtonComponent } from '../../../shared/components/whatsapp-button/whatsapp-button.component';
+
 import { Router } from '@angular/router';
 
 @Component({
@@ -24,7 +26,8 @@ import { Router } from '@angular/router';
     NavbarComponent,
     FooterComponent,
     ProductQuickViewComponent,
-    ProductCardComponent
+    ProductCardComponent,
+    WhatsappButtonComponent
   ]
 })
 

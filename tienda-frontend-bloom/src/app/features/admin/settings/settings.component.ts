@@ -199,6 +199,15 @@ export class SettingsComponent implements OnInit {
         return;
       }
       
+      // Validar tipo de archivo - permitir PNG, JPG, ICO
+      const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/x-icon', 'image/vnd.microsoft.icon'];
+      if (!this.validateFileType(file, allowedTypes)) {
+        this.faviconError = `Tipo de archivo no válido. Por favor, sube un archivo PNG, JPG o ICO.`;
+        this.selectedFaviconFile = null;
+        element.value = '';
+        return;
+      }
+      
       this.faviconError = null;
       this.selectedFaviconFile = file;
       
@@ -209,6 +218,19 @@ export class SettingsComponent implements OnInit {
       };
       reader.readAsDataURL(this.selectedFaviconFile);
     }
+  }
+
+  // Añade esta función para validar los tipos de archivos
+  validateFileType(file: File, allowedTypes: string[]): boolean {
+    const fileType = file.type;
+    const extension = file.name.split('.').pop()?.toLowerCase();
+    
+    // Manejo especial para archivos .ico que pueden no tener un mimetype reconocido
+    if (extension === 'ico') {
+      return allowedTypes.includes('image/x-icon') || allowedTypes.includes('image/vnd.microsoft.icon');
+    }
+    
+    return allowedTypes.includes(fileType);
   }
 
   onSubmit(): void {

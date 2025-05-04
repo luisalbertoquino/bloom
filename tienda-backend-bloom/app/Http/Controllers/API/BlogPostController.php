@@ -100,7 +100,8 @@ class BlogPostController extends Controller
     
     public function featured()
     {
-        $featuredPosts = BlogPost::where('featured', true)->take(3)->get();
+        $featuredPosts = BlogPost::where('featured', true)->get(); // Sin el take(3)
+        // O aumentar el límite: ->take(10)->get();
         return response()->json($featuredPosts)->withoutCookie(cookie('laravel_session'));
     }
 }

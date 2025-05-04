@@ -5,17 +5,24 @@
 
     RewriteEngine On
 
-    # Handle Authorization Header
+    # Handle Authorization Header (Laravel)
     RewriteCond %{HTTP:Authorization} .
     RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
 
-    # Redirect Trailing Slashes If Not A Folder...
+    # Redirect Trailing Slashes If Not A Folder (Laravel)
     RewriteCond %{REQUEST_FILENAME} !-d
     RewriteCond %{REQUEST_URI} (.+)/$
     RewriteRule ^ %1 [L,R=301]
 
-    # Send Requests To Front Controller...
-    RewriteCond %{REQUEST_FILENAME} !-d
-    RewriteCond %{REQUEST_FILENAME} !-f
+    # Regla 1: Si la ruta es para la API (Laravel), ignora Angular
+    RewriteCond %{REQUEST_URI} ^/api [NC]
     RewriteRule ^ index.php [L]
+
+    # Regla 2: Si es un archivo o directorio real (CSS, JS, imágenes), ignora
+    RewriteCond %{REQUEST_FILENAME} -f [OR]
+    RewriteCond %{REQUEST_FILENAME} -d
+    RewriteRule ^ - [L]
+
+    # Regla 3: Cualquier otra ruta -> Angular (index.html)
+    RewriteRule ^ index.html [L]
 </IfModule>

@@ -1,66 +1,83 @@
 <nav class="bg-primary shadow-md py-4 fixed top-0 left-0 w-full z-10">
   <div class="container mx-auto px-4 flex justify-between items-center">
-    <!-- Menú móvil (ahora a la izquierda) -->
+    <!-- Menú móvil (solo visible en móvil) -->
     <button (click)="toggleMobileMenu()" class="md:hidden text-white hover:text-secondary transition">
       <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
       </svg>
     </button>
-    
-    <!-- Logo (centrado en móvil) -->
-    <div class="flex items-center justify-center flex-grow md:flex-grow-0">
+
+    <!-- Logo y nombre (siempre a la izquierda en desktop) -->
+    <div class="flex items-center justify-center flex-grow md:flex-grow-0 md:justify-start">
       <a [routerLink]="['/']" class="flex items-center">
         <img [src]="logoUrl" alt="Bloom Accesorios" class="h-10 w-auto">
-        <span class="ml-2 text-xl font-semibold text-white">{{ siteTitle }}</span>
+        <span class="ml-3 text-xl font-semibold text-white tracking-tight">{{ siteTitle }}</span>
       </a>
-    </div> 
-
-    <!-- Navegación principal (móvil: oculto, desktop: visible) -->
-    <div class="hidden md:flex items-center space-x-6">
-      <a [routerLink]="['/']" routerLinkActive="text-secondary" [routerLinkActiveOptions]="{exact: true}" 
-         class="text-white hover:text-secondary transition">Inicio</a>
-      <a [routerLink]="['/productos']" routerLinkActive="text-secondary" 
-         class="text-white hover:text-secondary transition">Productos</a>
-      <a [routerLink]="['/blog']" routerLinkActive="text-secondary" 
-         class="text-white hover:text-secondary transition">Blog</a>
     </div>
 
-    <!-- Iconos derecha (ahora en un grupo) -->
-    <div class="flex items-center space-x-4">
-      <!-- Botón de búsqueda -->
+    <!-- Navegación principal + Iconos (todo a la derecha en desktop) -->
+    <div class="hidden md:flex items-center space-x-8">
+      <!-- Links de navegación -->
+      <a [routerLink]="['/']" routerLinkActive="text-secondary" [routerLinkActiveOptions]="{exact: true}"
+         class="text-white hover:text-secondary transition font-medium">Inicio</a>
+      <a [routerLink]="['/productos']" routerLinkActive="text-secondary"
+         class="text-white hover:text-secondary transition font-medium">Productos</a>
+      <a [routerLink]="['/blog']" routerLinkActive="text-secondary"
+         class="text-white hover:text-secondary transition font-medium">Blog</a>
+
+      <!-- Separador vertical -->
+      <div class="h-6 w-px bg-white opacity-30"></div>
+
+      <!-- Iconos de acción -->
       <button (click)="toggleSearch()" class="text-white hover:text-secondary transition">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
         </svg>
       </button>
 
-      <!-- Botón de login/usuario -->
       <div class="relative">
         <button (click)="toggleLoginModal()" class="text-white hover:text-secondary transition">
           <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
           </svg>
         </button>
-          <!-- Menú de usuario -->
-          <div *ngIf="isAuthenticated && isUserMenuOpen" 
-            class="user-menu absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-10 transition-all duration-200 ease-in-out">
-            <a [routerLink]="['/admin']" 
-              class="block px-4 py-2 text-sm text-gray-700 hover:bg-primary hover:text-white transition-colors duration-200 ease-in-out">
-                Panel de administración
-            </a>
-            <button (click)="logout()" 
-                    class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-primary hover:text-white transition-colors duration-200 ease-in-out">
-                Cerrar sesión
-            </button>
+        <div *ngIf="isAuthenticated && isUserMenuOpen"
+          class="user-menu absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-10 transition-all duration-200 ease-in-out">
+          <a [routerLink]="['/admin']"
+            class="block px-4 py-2 text-sm text-gray-700 hover:bg-primary hover:text-white transition-colors duration-200 ease-in-out">
+            Panel de administración
+          </a>
+          <button (click)="logout()"
+            class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-primary hover:text-white transition-colors duration-200 ease-in-out">
+            Cerrar sesión
+          </button>
         </div>
       </div>
-      
-      <!-- Carrito -->
+
       <button (click)="toggleCart()" class="text-white hover:text-secondary transition relative">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
         </svg>
-        <span *ngIf="cartItemCount > 0" 
+        <span *ngIf="cartItemCount > 0"
+          class="absolute -top-2 -right-2 bg-white text-primary text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center border border-primary">
+          {{ cartItemCount }}
+        </span>
+      </button>
+    </div>
+
+    <!-- Iconos móviles (visible solo en móvil) -->
+    <div class="flex md:hidden items-center space-x-4">
+      <button (click)="toggleSearch()" class="text-white hover:text-secondary transition">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+        </svg>
+      </button>
+
+      <button (click)="toggleCart()" class="text-white hover:text-secondary transition relative">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+        </svg>
+        <span *ngIf="cartItemCount > 0"
           class="absolute -top-2 -right-2 bg-white text-primary text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center border border-primary">
           {{ cartItemCount }}
         </span>

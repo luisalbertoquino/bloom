@@ -1,11 +1,26 @@
 // src/styles.scss
 @use 'tailwindcss';
 
+// Importar fuente Inter de Google Fonts para mejor legibilidad
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
 // Definimos variables CSS para los colores
 :root {
   --color-primary: #fc6280;
   --color-primary-dark: #e5486a;
   --color-secondary: #f8a5c2;
+}
+
+// Aplicar fuente Inter a todo el sitio
+* {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  letter-spacing: -0.01em;
 }
 
 // Extendemos Tailwind con nuestros colores

@@ -1,8 +1,21 @@
 :host {
   display: block;
-  
+
   nav {
     background-color: var(--color-primary);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+
+  // Mejorar el espaciado y legibilidad del navbar
+  .container {
+    max-width: 1280px;
+  }
+
+  // Mejorar los links de navegación
+  a.font-medium {
+    font-size: 0.9375rem;
+    letter-spacing: -0.01em;
+    font-weight: 500;
   }
   
   .fixed.inset-0.bg-black.bg-opacity-60 {

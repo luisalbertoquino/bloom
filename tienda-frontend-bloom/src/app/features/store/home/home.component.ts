@@ -11,6 +11,7 @@ import { ProductService, Product } from '../../../core/services/product.service'
 import { BlogService, BlogPost } from '../../../core/services/blog.service';
 import { SettingsService } from '../../../core/services/settings.service';
 import { CartService } from '../../../core/services/cart.service';
+import { BannerService, Banner } from '../../../core/services/banner.service';
 import { environment } from '../../../../environments/environment';
 import { ProductQuickViewComponent } from '../product-quick-view/product-quick-view.component';
 
@@ -106,6 +107,7 @@ export class HomeComponent implements OnInit, OnDestroy {
     private blogService: BlogService,
     private settingsService: SettingsService,
     private cartService: CartService,
+    private bannerService: BannerService,
     private router: Router,
     @Inject(PLATFORM_ID) private platformId: Object,
     @Inject(DOCUMENT) private document: Document
@@ -670,14 +672,22 @@ export class HomeComponent implements OnInit, OnDestroy {
         console.error('Error loading settings', error);
         return of({});
       })
-    ); 
-  
+    );
+
+    const safeBanners$ = this.bannerService.getActiveBanners().pipe(
+      catchError(error => {
+        console.error('Error loading banners', error);
+        return of([]);
+      })
+    );
+
     // Combinar todos los observables
     forkJoin({
       categories: safeCategories$,
       products: safeProducts$,
       posts: safePosts$,
-      settings: safeSettings$
+      settings: safeSettings$,
+      banners: safeBanners$
     }).subscribe(results => {
       // Procesar categorías
       if (results.categories && Array.isArray(results.categories)) {
@@ -715,37 +725,30 @@ export class HomeComponent implements OnInit, OnDestroy {
         this.featuredPosts = results.posts;
       }
       
-      // Procesar configuraciones y banners
-      if (results.settings) {
-        // Cargar banners desde settings
-        if (results.settings.banners && Array.isArray(results.settings.banners)) {
-          this.banners = results.settings.banners.filter((b: any) => b.active);
-        }
+      // Procesar banners desde la API
+      if (results.banners && Array.isArray(results.banners) && results.banners.length > 0) {
+        this.banners = results.banners;
+      } else if (results.settings && results.settings.banner_image) {
+        // Fallback al banner de settings si no hay banners en la API
+        this.banners = [{
+          image: results.settings.banner_image,
+          title: '',
+          description: '',
+          active: true
+        }];
+      } else {
+        // Último fallback
+        this.banners = [{
+          image: '/assets/images/banner.jpg',
+          title: '',
+          description: '',
+          active: true
+        }];
+      }
 
-        // Si no hay banners configurados, usar el banner por defecto
-        if (this.banners.length === 0 && results.settings.banner_image) {
-          this.banners = [{
-            image: results.settings.banner_image,
-            title: '',
-            description: '',
-            active: true
-          }];
-        }
-
-        // Fallback al banner por defecto si no hay nada configurado
-        if (this.banners.length === 0) {
-          this.banners = [{
-            image: '/assets/images/banner.jpg',
-            title: '',
-            description: '',
-            active: true
-          }];
-        }
-
-        // Iniciar el slider de banners si hay más de uno
-        if (this.banners.length > 1) {
-          this.startBannerSlider();
-        }
+      // Iniciar el slider de banners si hay más de uno
+      if (this.banners.length > 1) {
+        this.startBannerSlider();
       }
 
       // Iniciar el slider de blog directamente aquí si hay posts

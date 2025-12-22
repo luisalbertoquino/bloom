@@ -5,6 +5,7 @@ use App\Http\Controllers\API\ProductController;
 use App\Http\Controllers\API\BlogPostController;
 use App\Http\Controllers\API\SettingController;
 use App\Http\Controllers\API\AuthController;
+use App\Http\Controllers\API\BannerController;
 use Illuminate\Support\Facades\Route;
 
 // Manejo de solicitudes OPTIONS para CORS
@@ -34,6 +35,9 @@ Route::get('blog-posts/{blogPost}', [BlogPostController::class, 'show']);
 Route::get('settings', [SettingController::class, 'index']);
 Route::get('settings/{key}', [SettingController::class, 'show']);
 
+// Banners públicos (solo activos)
+Route::get('banners/active', [BannerController::class, 'active']);
+
 // Rutas de autenticación
 Route::post('login', [AuthController::class, 'login']);
 
@@ -61,4 +65,12 @@ Route::middleware('auth:sanctum')->group(function () {
     
     // Configuraciones
     Route::post('settings', [SettingController::class, 'store']);
+
+    // Banners (CRUD completo para admin)
+    Route::get('banners', [BannerController::class, 'index']);
+    Route::post('banners', [BannerController::class, 'store']);
+    Route::get('banners/{banner}', [BannerController::class, 'show']);
+    Route::post('banners/{banner}', [BannerController::class, 'update']); // POST porque enviamos FormData con imagen
+    Route::delete('banners/{banner}', [BannerController::class, 'destroy']);
+    Route::post('banners/update-order', [BannerController::class, 'updateOrder']);
 });

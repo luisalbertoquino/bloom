@@ -14,9 +14,12 @@
   <!-- Contenido principal (solo se muestra cuando no está cargando) -->
   <ng-container *ngIf="!isLoading">
     <div class="flex-grow">
-      <!-- Banner principal con altura aumentada -->
-      <div class="w-full bg-gray-200">
-        <img [src]="bannerUrl" alt="Banner Principal" class="w-full h-80 sm:h-96 md:h-[500px] lg:h-[600px] object-cover">
+      <!-- Banner principal con altura aumentada y ancho contenido en desktop -->
+      <div class="w-full bg-gray-100 py-0 md:py-8">
+        <div class="w-full md:container md:mx-auto md:px-4">
+          <img [src]="bannerUrl" alt="Banner Principal"
+               class="w-full h-80 sm:h-96 md:h-[500px] lg:h-[600px] object-cover md:rounded-2xl md:shadow-lg">
+        </div>
       </div>
 
       <!-- NUEVO ORDEN: 1. Sección Categorías con slider mejorado -->

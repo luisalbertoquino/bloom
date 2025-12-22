@@ -145,34 +145,55 @@ export class LoginComponent implements OnInit, OnDestroy {
       },
       error: (error) => {
         this.isSubmitting = false;
-        
-        if (error.status === 401) {
-          // Error de credenciales incorrectas (401 Unauthorized)
-          this.errorMessage = 'Credenciales incorrectas';
-          this.showError = true;
-        } else if (error.status === 431 || error.status === 419) {
-          // Errores de CSRF o headers demasiado grandes
-          const errorText = error.status === 431 
-            ? 'Error de conexión.' 
-            : 'Error de seguridad.';
-          
-          this.errorMessage = `${errorText} Es necesario recargar la página.`;
-          this.showError = true;
-          this.showReloadButton = true; // Mostrar botón de recarga
-        } else if (error.message) {
-          // Error con mensaje definido (del AuthService)
+
+        // Prioridad 1: Verificar si hay un mensaje personalizado del AuthService
+        if (error.message) {
           this.errorMessage = error.message;
           this.showError = true;
-          
+
           // Si el mensaje menciona recargar, mostrar botón
           if (error.message.toLowerCase().includes('recarga')) {
             this.showReloadButton = true;
           }
-        } else if (error.error && error.error.message) {
+
+          // No imprimir errores de credenciales incorrectas en consola
+          if (!error.message.toLowerCase().includes('credenciales')) {
+            console.error('Error de login:', error);
+          }
+          return;
+        }
+
+        // Prioridad 2: Verificar status code
+        if (error.status === 401) {
+          // Error de credenciales incorrectas (401 Unauthorized)
+          this.errorMessage = 'Credenciales incorrectas. Por favor, verifica tu email y contraseña.';
+          this.showError = true;
+          return;
+        }
+
+        if (error.status === 431 || error.status === 419) {
+          // Errores de CSRF o headers demasiado grandes
+          const errorText = error.status === 431
+            ? 'Error de conexión.'
+            : 'Error de seguridad.';
+
+          this.errorMessage = `${errorText} Es necesario recargar la página.`;
+          this.showError = true;
+          this.showReloadButton = true;
+          console.error('Error de login:', error);
+          return;
+        }
+
+        // Prioridad 3: Verificar error.error.message
+        if (error.error && error.error.message) {
           this.errorMessage = error.error.message;
           this.showError = true;
-        } else if (error.error && error.error.errors) {
-          // Errores de validación del backend
+          console.error('Error de login:', error);
+          return;
+        }
+
+        // Prioridad 4: Errores de validación del backend
+        if (error.error && error.error.errors) {
           if (error.error.errors.email) {
             this.errorMessage = error.error.errors.email[0];
           } else if (error.error.errors.password) {
@@ -181,16 +202,14 @@ export class LoginComponent implements OnInit, OnDestroy {
             this.errorMessage = 'Error de validación. Por favor, verifica tus datos.';
           }
           this.showError = true;
-        } else {
-          // Error genérico
-          this.errorMessage = 'Error al iniciar sesión. Por favor, intenta de nuevo.';
-          this.showError = true;
+          console.error('Error de login:', error);
+          return;
         }
-        
-        // No imprimir errores normales como 401 en la consola
-        if (error.status !== 401) {
-          console.error('Error de login inesperado:', error);
-        }
+
+        // Último recurso: Error genérico
+        this.errorMessage = 'Error al iniciar sesión. Por favor, intenta de nuevo.';
+        this.showError = true;
+        console.error('Error de login inesperado:', error);
       }
     });
     

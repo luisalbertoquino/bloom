@@ -19,7 +19,10 @@ return [
 
     'allowed_methods' => ['*'],
 
-    'allowed_origins' => ['http://localhost:4200'], // Tu frontend Angular
+    'allowed_origins' => [
+        'http://localhost:4200',           // Desarrollo local
+        'https://store.invite-art.com',    // Producción
+    ],
 
     'allowed_origins_patterns' => [],
 

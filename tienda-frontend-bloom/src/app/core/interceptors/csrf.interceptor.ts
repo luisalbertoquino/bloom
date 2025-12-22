@@ -106,7 +106,8 @@ export const csrfInterceptor: HttpInterceptorFn = (req: HttpRequest<unknown>, ne
       }
 
       // Para errores de autenticación, intentar renovar la sesión
-      if (error.status === 401) {
+      // PERO NO para la ruta de login (donde 401 significa credenciales incorrectas)
+      if (error.status === 401 && !req.url.includes('/api/login')) {
         console.warn('Error de autenticación 401 - Intentando renovar sesión...');
         globalRetryCount++;
         

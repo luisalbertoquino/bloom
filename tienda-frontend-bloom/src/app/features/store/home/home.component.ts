@@ -45,6 +45,11 @@ export class HomeComponent implements OnInit, OnDestroy {
   isLoading = true;
   storageUrl = environment.storageUrl;
 
+  // Variables para el slider de banners
+  banners: any[] = [];
+  currentBannerIndex = 0;
+  bannerInterval: any = null;
+
   duplicatedBlogPosts: BlogPost[] = []; // Posts duplicados para el efecto de bucle infinito
   blogSliderPosition = 0; // Posición actual del slider
   blogIsDragging = false; // Indica si se está arrastrando el slider
@@ -127,16 +132,21 @@ export class HomeComponent implements OnInit, OnDestroy {
     if (this.sliderTimer) {
       this.sliderTimer.unsubscribe();
     }
-    
+
     if (this.blogSliderTimer) {
       this.blogSliderTimer.unsubscribe();
     }
-    
+
+    // Detener el slider de banners
+    if (this.bannerInterval) {
+      clearInterval(this.bannerInterval);
+    }
+
     // Limpiar cualquier timeout pendiente
     if (this.autoResumeTimeout) {
       clearTimeout(this.autoResumeTimeout);
     }
-    
+
     if (this.blogAutoResumeTimeout) {
       clearTimeout(this.blogAutoResumeTimeout);
     }
@@ -705,9 +715,37 @@ export class HomeComponent implements OnInit, OnDestroy {
         this.featuredPosts = results.posts;
       }
       
-      // Procesar configuraciones
-      if (results.settings && results.settings.banner_image) {
-        this.bannerUrl = this.storageUrl + results.settings.banner_image;
+      // Procesar configuraciones y banners
+      if (results.settings) {
+        // Cargar banners desde settings
+        if (results.settings.banners && Array.isArray(results.settings.banners)) {
+          this.banners = results.settings.banners.filter((b: any) => b.active);
+        }
+
+        // Si no hay banners configurados, usar el banner por defecto
+        if (this.banners.length === 0 && results.settings.banner_image) {
+          this.banners = [{
+            image: results.settings.banner_image,
+            title: '',
+            description: '',
+            active: true
+          }];
+        }
+
+        // Fallback al banner por defecto si no hay nada configurado
+        if (this.banners.length === 0) {
+          this.banners = [{
+            image: '/assets/images/banner.jpg',
+            title: '',
+            description: '',
+            active: true
+          }];
+        }
+
+        // Iniciar el slider de banners si hay más de uno
+        if (this.banners.length > 1) {
+          this.startBannerSlider();
+        }
       }
 
       // Iniciar el slider de blog directamente aquí si hay posts
@@ -731,6 +769,40 @@ export class HomeComponent implements OnInit, OnDestroy {
       this.products.length > 0
     ) {
       this.isLoading = false;
+    }
+  }
+
+  // ==================== MÉTODOS DEL SLIDER DE BANNERS ====================
+
+  private startBannerSlider(): void {
+    if (!this.isBrowser || this.banners.length <= 1) return;
+
+    this.bannerInterval = setInterval(() => {
+      this.nextBanner();
+    }, 3000); // Cambiar cada 3 segundos
+  }
+
+  nextBanner(): void {
+    if (this.banners.length === 0) return;
+    this.currentBannerIndex = (this.currentBannerIndex + 1) % this.banners.length;
+  }
+
+  prevBanner(): void {
+    if (this.banners.length === 0) return;
+    this.currentBannerIndex = this.currentBannerIndex === 0
+      ? this.banners.length - 1
+      : this.currentBannerIndex - 1;
+  }
+
+  goToBanner(index: number): void {
+    if (index >= 0 && index < this.banners.length) {
+      this.currentBannerIndex = index;
+
+      // Reiniciar el intervalo para que no cambie inmediatamente después de hacer clic
+      if (this.bannerInterval) {
+        clearInterval(this.bannerInterval);
+        this.startBannerSlider();
+      }
     }
   }
 }

@@ -49,7 +49,7 @@
           <span *ngIf="isAuthenticated" class="absolute -top-1 -right-1 h-3 w-3 bg-green-400 border-2 border-primary rounded-full"></span>
         </button>
         <div *ngIf="isAuthenticated && isUserMenuOpen"
-          class="user-menu absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50 transition-all duration-200 ease-in-out"
+          class="user-menu absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-50 transition-all duration-200 ease-in-out"
           (click)="$event.stopPropagation()">
           <a [routerLink]="['/admin']" (click)="isUserMenuOpen = false"
             class="block px-4 py-2 text-sm text-gray-700 hover:bg-primary hover:text-white transition-colors duration-200 ease-in-out">

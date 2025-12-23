@@ -60,11 +60,13 @@
 
             <!-- Indicadores -->
             <div *ngIf="banners.length > 1" class="absolute bottom-4 left-1/2 -translate-x-1/2 flex space-x-2 z-10">
-              <button *ngFor="let banner of banners; let i = index"
-                      (click)="goToBanner(i)"
-                      [class.bg-white]="currentBannerIndex === i"
-                      [class.bg-white/50]="currentBannerIndex !== i"
-                      class="w-3 h-3 rounded-full transition-all duration-300 hover:bg-white/80">
+              <button
+                *ngFor="let banner of banners; let i = index"
+                (click)="goToBanner(i)"
+                [class.bg-white]="currentBannerIndex === i"
+                [class.bg-white/50]="currentBannerIndex !== i"
+                class="w-3 h-3 rounded-full transition-all duration-300 hover:bg-white/80"
+                [attr.aria-label]="'Banner ' + (i + 1)">
               </button>
             </div>
           </div>

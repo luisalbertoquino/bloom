@@ -10,13 +10,14 @@ import { AuthStateService } from './core/services/auth-state.service';
 import { AppLoaderComponent } from '../app/shared/components/app-loader/app-loader.component';
 import { ThemeService } from './core/services/theme.service';
 import { SettingsService } from './core/services/settings.service';
+import { TopBarComponent } from './shared/components/top-bar/top-bar.component';
 
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.scss'],
   standalone: true,
-  imports: [RouterOutlet, CommonModule, AppLoaderComponent]
+  imports: [RouterOutlet, CommonModule, AppLoaderComponent, TopBarComponent]
 })
 export class AppComponent implements OnInit, OnDestroy {
   title = 'mi-app';

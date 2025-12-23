@@ -1,8 +1,10 @@
 <!-- app.component.html -->
+<app-top-bar></app-top-bar>
+
 <ng-container *ngIf="(authCheckCompleted$ | async); else loading">
     <router-outlet></router-outlet>
   </ng-container>
-  
+
   <ng-template #loading>
     <app-loader></app-loader>
   </ng-template>

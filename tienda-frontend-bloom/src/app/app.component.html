@@ -1,6 +1,6 @@
 <!-- app.component.html -->
-<app-top-bar></app-top-bar>
-<app-promotional-popup></app-promotional-popup>
+<app-top-bar *ngIf="!isAdminRoute"></app-top-bar>
+<app-promotional-popup *ngIf="!isAdminRoute"></app-promotional-popup>
 
 <ng-container *ngIf="(authCheckCompleted$ | async); else loading">
     <router-outlet></router-outlet>

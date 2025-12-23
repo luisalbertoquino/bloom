@@ -133,18 +133,43 @@
           </svg>
           Vista previa del popup
         </h3>
-        <div class="bg-white rounded-lg shadow-lg p-6 max-w-md mx-auto">
-          <div *ngIf="imagePreview" class="mb-4">
+
+        <!-- Preview para modo "solo imagen" -->
+        <div *ngIf="isOnlyImageMode()" class="max-w-md mx-auto relative">
+          <div *ngIf="imagePreview" class="relative">
             <img [src]="imagePreview" alt="Preview" class="w-full h-auto rounded-lg">
+            <div class="absolute top-3 right-3 bg-black bg-opacity-40 text-white rounded-full p-1">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </div>
           </div>
-          <h4 class="text-xl font-bold text-gray-900 mb-2">{{ popupForm.get('title')?.value || 'Título del popup' }}</h4>
-          <p class="text-gray-700 mb-4 whitespace-pre-line">{{ popupForm.get('content')?.value || 'Contenido del popup aparecerá aquí...' }}</p>
-          <button type="button" class="w-full bg-primary text-white px-4 py-2 rounded-md font-medium">
-            {{ popupForm.get('button_text')?.value || 'Botón' }}
-          </button>
+          <div *ngIf="!imagePreview" class="bg-gray-200 rounded-lg p-8 text-center text-gray-500">
+            Sube una imagen para ver la vista previa
+          </div>
         </div>
+
+        <!-- Preview para modo normal (con contenido) -->
+        <div *ngIf="!isOnlyImageMode()" class="bg-white rounded-lg shadow-lg max-w-md mx-auto overflow-hidden">
+          <div *ngIf="imagePreview" class="w-full">
+            <img [src]="imagePreview" alt="Preview" class="w-full h-auto max-h-64 object-cover">
+          </div>
+          <div class="p-6">
+            <h4 *ngIf="popupForm.get('title')?.value" class="text-xl font-bold text-gray-900 mb-2">
+              {{ popupForm.get('title')?.value }}
+            </h4>
+            <p *ngIf="popupForm.get('content')?.value" class="text-gray-700 mb-4 whitespace-pre-line">
+              {{ popupForm.get('content')?.value }}
+            </p>
+            <button *ngIf="popupForm.get('button_text')?.value" type="button" class="w-full bg-primary text-white px-4 py-2 rounded-md font-medium">
+              {{ popupForm.get('button_text')?.value }}
+            </button>
+          </div>
+        </div>
+
         <p class="text-xs text-blue-700 mt-3 text-center">
           Se mostrará después de {{ popupForm.get('delay_seconds')?.value || 0 }} segundos • {{ getFrequencyLabel() }}
+          <span *ngIf="isOnlyImageMode()" class="block mt-1 font-semibold">Modo: Solo imagen</span>
         </p>
       </div>
 

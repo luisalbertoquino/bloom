@@ -5,13 +5,14 @@
      (click)="close()">
 
   <!-- Popup Modal -->
-  <div class="popup-modal bg-white rounded-lg shadow-2xl max-w-md w-full relative animate-popup"
+  <div class="popup-modal rounded-lg max-w-md w-full relative animate-popup"
+       [ngClass]="hasOnlyImage() ? '' : 'bg-white shadow-2xl'"
        (click)="$event.stopPropagation()">
 
     <!-- Botón de cerrar -->
     <button (click)="close()"
             class="absolute top-3 right-3 transition-colors z-10"
-            [ngClass]="hasOnlyImage() ? 'text-white hover:text-gray-200' : 'text-gray-400 hover:text-gray-600'"
+            [ngClass]="hasOnlyImage() ? 'text-white hover:text-gray-200 bg-black bg-opacity-40 rounded-full p-1' : 'text-gray-400 hover:text-gray-600'"
             aria-label="Cerrar">
       <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -19,11 +20,10 @@
     </button>
 
     <!-- Imagen (si existe) -->
-    <div *ngIf="popup.image" class="w-full">
-      <img [src]="getImageUrl(popup.image)"
-           [alt]="popup.title || 'Promoción'"
-           [ngClass]="hasOnlyImage() ? 'w-full h-auto rounded-lg object-cover' : 'w-full h-auto rounded-t-lg object-cover max-h-64'">
-    </div>
+    <img *ngIf="popup.image"
+         [src]="getImageUrl(popup.image)"
+         [alt]="popup.title || 'Promoción'"
+         [ngClass]="hasOnlyImage() ? 'w-full h-auto rounded-lg object-cover' : 'w-full h-auto rounded-t-lg object-cover max-h-64'">
 
     <!-- Contenido del popup (solo si hay título, contenido o botón) -->
     <div *ngIf="popup.title || popup.content || popup.button_text"

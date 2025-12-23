@@ -25,6 +25,7 @@ export class AppComponent implements OnInit, OnDestroy {
   private routerSubscription: Subscription | null = null;
   private isBrowser: boolean;
   authCheckCompleted$: Observable<boolean>;
+  isAdminRoute = false;
 
   constructor(
     private authService: AuthService,
@@ -36,6 +37,13 @@ export class AppComponent implements OnInit, OnDestroy {
   ) {
     this.isBrowser = isPlatformBrowser(this.platformId);
     this.authCheckCompleted$ = this.authStateService.authCheckCompleted$;
+
+    // Detectar cambios de ruta para saber si estamos en admin
+    this.router.events.subscribe(event => {
+      if (event instanceof NavigationEnd) {
+        this.isAdminRoute = event.url.startsWith('/admin') || event.url.startsWith('/login');
+      }
+    });
   }
 
   ngOnInit() {

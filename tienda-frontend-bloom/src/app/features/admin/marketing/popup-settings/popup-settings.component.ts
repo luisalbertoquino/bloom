@@ -271,4 +271,13 @@ export class PopupSettingsComponent implements OnInit {
     const option = this.frequencyOptions.find(f => f.value === frequency);
     return option ? option.label : '';
   }
+
+  isOnlyImageMode(): boolean {
+    // Retorna true si solo hay imagen sin título, contenido ni botón
+    const title = this.popupForm.get('title')?.value;
+    const content = this.popupForm.get('content')?.value;
+    const buttonText = this.popupForm.get('button_text')?.value;
+
+    return this.imagePreview !== null && !title && !content && !buttonText;
+  }
 }

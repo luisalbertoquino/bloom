@@ -25,4 +25,19 @@ class Product extends Model
     {
         return $this->hasMany(ProductImage::class);
     }
+
+    public function costs(): HasMany
+    {
+        return $this->hasMany(ProductCost::class);
+    }
+
+    public function stockMovements(): HasMany
+    {
+        return $this->hasMany(StockMovement::class);
+    }
+
+    public function expenses(): HasMany
+    {
+        return $this->hasMany(Expense::class);
+    }
 }

@@ -8,6 +8,7 @@ use App\Http\Controllers\API\AuthController;
 use App\Http\Controllers\API\BannerController;
 use App\Http\Controllers\API\PopupController;
 use App\Http\Controllers\API\AnalyticsController;
+use App\Http\Controllers\API\AccountingController;
 use Illuminate\Support\Facades\Route;
 
 // Manejo de solicitudes OPTIONS para CORS
@@ -89,4 +90,20 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Analytics dashboard
     Route::get('analytics/dashboard', [AnalyticsController::class, 'dashboard']);
+
+    // Accounting - Product Costs
+    Route::get('products/{product}/costs', [AccountingController::class, 'getProductCosts']);
+    Route::post('product-costs', [AccountingController::class, 'storeProductCost']);
+    Route::put('product-costs/{productCost}', [AccountingController::class, 'updateProductCost']);
+    Route::delete('product-costs/{productCost}', [AccountingController::class, 'deleteProductCost']);
+
+    // Accounting - Expenses
+    Route::get('expenses', [AccountingController::class, 'getExpenses']);
+    Route::post('expenses', [AccountingController::class, 'storeExpense']);
+    Route::put('expenses/{expense}', [AccountingController::class, 'updateExpense']);
+    Route::delete('expenses/{expense}', [AccountingController::class, 'deleteExpense']);
+
+    // Accounting - Dashboard
+    Route::get('accounting/dashboard', [AccountingController::class, 'dashboard']);
+    Route::get('accounting/products-without-costs', [AccountingController::class, 'getProductsWithoutCosts']);
 });

@@ -47,6 +47,10 @@ export const ADMIN_ROUTES: Routes = [
           {
             path: 'analytics',
             loadComponent: () => import('./marketing/analytics/analytics.component').then(m => m.AnalyticsComponent)
+          },
+          {
+            path: 'contabilidad',
+            loadComponent: () => import('./accounting/accounting.component').then(m => m.AccountingComponent)
           }
         ]
       },

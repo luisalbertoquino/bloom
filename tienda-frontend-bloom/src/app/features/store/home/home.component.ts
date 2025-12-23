@@ -728,16 +728,8 @@ export class HomeComponent implements OnInit, OnDestroy {
       // Procesar banners desde la API
       if (results.banners && Array.isArray(results.banners) && results.banners.length > 0) {
         this.banners = results.banners;
-      } else if (results.settings && results.settings.banner_image) {
-        // Fallback al banner de settings si no hay banners en la API
-        this.banners = [{
-          image: results.settings.banner_image,
-          title: '',
-          description: '',
-          active: true
-        }];
       } else {
-        // Último fallback
+        // Fallback si no hay banners en la API
         this.banners = [{
           image: '/assets/images/banner.jpg',
           title: '',

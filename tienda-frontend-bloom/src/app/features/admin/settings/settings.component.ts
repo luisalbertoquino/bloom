@@ -26,10 +26,8 @@ export class SettingsComponent implements OnInit {
   successMessage = '';
   showUpdateConfirmation = false;
   selectedLogoFile: File | null = null;
-  selectedBannerFile: File | null = null;
   selectedFaviconFile: File | null = null;
   logoPreview: string | null = null;
-  bannerPreview: string | null = null;
   faviconPreview: string | null = null;
   storageUrl = environment.storageUrl;
   autoRetrying = false;
@@ -38,7 +36,6 @@ export class SettingsComponent implements OnInit {
 
   // Errores de validación de archivos
   logoError: string | null = null;
-  bannerError: string | null = null;
   faviconError: string | null = null;
   
   // Tamaño máximo de archivo (2MB en bytes)
@@ -97,15 +94,11 @@ export class SettingsComponent implements OnInit {
           whatsapp_number: settings.whatsapp_number || ''
         });
         
-        // Si hay logo, banner o favicon, mostrar previsualizaciones
+        // Si hay logo o favicon, mostrar previsualizaciones
         if (settings.logo) {
           this.logoPreview = this.storageUrl + settings.logo;
         }
-        
-        if (settings.banner_image) {
-          this.bannerPreview = this.storageUrl + settings.banner_image;
-        }
-        
+
         if (settings.favicon) {
           this.faviconPreview = this.storageUrl + settings.favicon;
         }
@@ -158,31 +151,6 @@ export class SettingsComponent implements OnInit {
         this.logoPreview = reader.result as string;
       };
       reader.readAsDataURL(this.selectedLogoFile);
-    }
-  }
-
-  onBannerSelected(event: Event): void {
-    const element = event.target as HTMLInputElement;
-    if (element.files && element.files.length > 0) {
-      const file = element.files[0];
-      
-      // Validar tamaño
-      if (!this.validateFileSize(file)) {
-        this.bannerError = `El archivo es demasiado grande (${this.formatFileSize(file.size)} MB). Máximo permitido: 2 MB.`;
-        this.selectedBannerFile = null;
-        element.value = ''; // Limpiar el input
-        return;
-      }
-      
-      this.bannerError = null;
-      this.selectedBannerFile = file;
-      
-      // Crear previsualización
-      const reader = new FileReader();
-      reader.onload = () => {
-        this.bannerPreview = reader.result as string;
-      };
-      reader.readAsDataURL(this.selectedBannerFile);
     }
   }
 
@@ -244,7 +212,7 @@ export class SettingsComponent implements OnInit {
     }
   
     // Verificar si hay errores de validación de archivos
-    if (this.logoError || this.bannerError || this.faviconError) {
+    if (this.logoError || this.faviconError) {
       this.errorMessage = 'Corrige los errores en los archivos antes de continuar.';
       setTimeout(() => this.errorMessage = '', 5000);
       return;
@@ -265,11 +233,7 @@ export class SettingsComponent implements OnInit {
     if (this.selectedLogoFile) {
       formData.append('logo', this.selectedLogoFile);
     }
-    
-    if (this.selectedBannerFile) {
-      formData.append('banner_image', this.selectedBannerFile);
-    }
-    
+
     if (this.selectedFaviconFile) {
       formData.append('favicon', this.selectedFaviconFile);
     }
@@ -360,28 +324,17 @@ export class SettingsComponent implements OnInit {
   resetForm(): void {
     this.loadSettings();
     this.selectedLogoFile = null;
-    this.selectedBannerFile = null;
     this.selectedFaviconFile = null;
     this.logoError = null;
-    this.bannerError = null;
-    this.faviconError = null,
-    this.logoError = null;
-    this.bannerError = null;
     this.faviconError = null;
-    
+
     // Mantener las previsualizaciones actuales
     if (this.currentSettings.logo) {
       this.logoPreview = this.storageUrl + this.currentSettings.logo;
     } else {
       this.logoPreview = null;
     }
-    
-    if (this.currentSettings.banner_image) {
-      this.bannerPreview = this.storageUrl + this.currentSettings.banner_image;
-    } else {
-      this.bannerPreview = null;
-    }
-    
+
     if (this.currentSettings.favicon) {
       this.faviconPreview = this.storageUrl + this.currentSettings.favicon;
     } else {

@@ -11,13 +11,14 @@ import { AppLoaderComponent } from '../app/shared/components/app-loader/app-load
 import { ThemeService } from './core/services/theme.service';
 import { SettingsService } from './core/services/settings.service';
 import { TopBarComponent } from './shared/components/top-bar/top-bar.component';
+import { PromotionalPopupComponent } from './shared/components/promotional-popup/promotional-popup.component';
 
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.scss'],
   standalone: true,
-  imports: [RouterOutlet, CommonModule, AppLoaderComponent, TopBarComponent]
+  imports: [RouterOutlet, CommonModule, AppLoaderComponent, TopBarComponent, PromotionalPopupComponent]
 })
 export class AppComponent implements OnInit, OnDestroy {
   title = 'mi-app';

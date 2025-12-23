@@ -1,5 +1,6 @@
 <!-- app.component.html -->
 <app-top-bar></app-top-bar>
+<app-promotional-popup></app-promotional-popup>
 
 <ng-container *ngIf="(authCheckCompleted$ | async); else loading">
     <router-outlet></router-outlet>

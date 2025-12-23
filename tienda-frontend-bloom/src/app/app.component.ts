@@ -10,6 +10,7 @@ import { AuthStateService } from './core/services/auth-state.service';
 import { AppLoaderComponent } from '../app/shared/components/app-loader/app-loader.component';
 import { ThemeService } from './core/services/theme.service';
 import { SettingsService } from './core/services/settings.service';
+import { AnalyticsService } from './core/services/analytics.service';
 import { TopBarComponent } from './shared/components/top-bar/top-bar.component';
 import { PromotionalPopupComponent } from './shared/components/promotional-popup/promotional-popup.component';
 
@@ -26,6 +27,8 @@ export class AppComponent implements OnInit, OnDestroy {
   private isBrowser: boolean;
   authCheckCompleted$: Observable<boolean>;
   isAdminRoute = false;
+  private currentVisitId: number | null = null;
+  private visitStartTime: number = 0;
 
   constructor(
     private authService: AuthService,
@@ -33,7 +36,8 @@ export class AppComponent implements OnInit, OnDestroy {
     @Inject(PLATFORM_ID) private platformId: any,
     private authStateService: AuthStateService,
     private themeService: ThemeService,
-    private settingsService: SettingsService
+    private settingsService: SettingsService,
+    private analyticsService: AnalyticsService
   ) {
     this.isBrowser = isPlatformBrowser(this.platformId);
     this.authCheckCompleted$ = this.authStateService.authCheckCompleted$;
@@ -95,6 +99,24 @@ export class AppComponent implements OnInit, OnDestroy {
     this.routerSubscription = this.router.events
       .pipe(filter(event => event instanceof NavigationEnd))
       .subscribe((event: any) => {
+        // Actualizar duración de la visita anterior si existe
+        if (this.currentVisitId && this.visitStartTime) {
+          const duration = Math.floor((Date.now() - this.visitStartTime) / 1000);
+          this.analyticsService.updateVisitDuration(this.currentVisitId, duration).subscribe();
+        }
+
+        // Rastrear nueva visita de página (solo para rutas públicas, no admin)
+        if (!event.url.includes('/admin') && !event.url.includes('/login')) {
+          this.visitStartTime = Date.now();
+          this.analyticsService.trackPageVisit(event.url).subscribe({
+            next: (response) => {
+              if (response && response.visit_id) {
+                this.currentVisitId = response.visit_id;
+              }
+            }
+          });
+        }
+
         // Verificar si estamos en una ruta protegida
         if (event.url.includes('/admin')) {
           // Si estamos autenticados, renovar token CSRF periódicamente
@@ -111,6 +133,12 @@ export class AppComponent implements OnInit, OnDestroy {
   ngOnDestroy() {
     // Solo ejecutar código del lado del cliente si estamos en el navegador
     if (this.isBrowser) {
+      // Actualizar duración de la visita final
+      if (this.currentVisitId && this.visitStartTime) {
+        const duration = Math.floor((Date.now() - this.visitStartTime) / 1000);
+        this.analyticsService.updateVisitDuration(this.currentVisitId, duration).subscribe();
+      }
+
       if (this.routerSubscription) {
         this.routerSubscription.unsubscribe();
       }

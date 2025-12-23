@@ -41,7 +41,12 @@ export class ProductDetailComponent implements OnInit {
   ) { }
 
   ngOnInit(): void {
-    this.loadProduct();
+    // Suscribirse a cambios en los parámetros de la ruta
+    this.route.params.subscribe(params => {
+      this.loadProduct();
+      // Hacer scroll hacia arriba cuando cambia el producto
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
   }
 
   loadProduct(): void {

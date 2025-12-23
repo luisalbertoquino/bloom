@@ -4,6 +4,7 @@
   nav {
     background-color: var(--color-primary);
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    top: var(--top-bar-height, 0);
   }
 
   // Mejorar el espaciado y legibilidad del navbar

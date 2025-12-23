@@ -1,5 +1,5 @@
 // src/app/shared/components/top-bar/top-bar.component.ts
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, AfterViewInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { TopBarService, TopBarSettings } from '../../../core/services/top-bar.service';
 
@@ -10,7 +10,7 @@ import { TopBarService, TopBarSettings } from '../../../core/services/top-bar.se
   standalone: true,
   imports: [CommonModule]
 })
-export class TopBarComponent implements OnInit, OnDestroy {
+export class TopBarComponent implements OnInit, OnDestroy, AfterViewInit {
   settings: TopBarSettings | null = null;
   countdown: { days: number; hours: number; minutes: number; seconds: number } | null = null;
   countdownInterval: any;
@@ -20,6 +20,19 @@ export class TopBarComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.loadSettings();
+  }
+
+  ngAfterViewInit(): void {
+    // Set CSS variable for top-bar height
+    if (this.isVisible && typeof document !== 'undefined') {
+      setTimeout(() => {
+        const topBar = document.querySelector('.top-bar') as HTMLElement;
+        if (topBar) {
+          const height = topBar.offsetHeight;
+          document.documentElement.style.setProperty('--top-bar-height', `${height}px`);
+        }
+      }, 100);
+    }
   }
 
   ngOnDestroy(): void {

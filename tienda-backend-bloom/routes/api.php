@@ -6,6 +6,7 @@ use App\Http\Controllers\API\BlogPostController;
 use App\Http\Controllers\API\SettingController;
 use App\Http\Controllers\API\AuthController;
 use App\Http\Controllers\API\BannerController;
+use App\Http\Controllers\API\PopupController;
 use Illuminate\Support\Facades\Route;
 
 // Manejo de solicitudes OPTIONS para CORS
@@ -37,6 +38,9 @@ Route::get('settings/{key}', [SettingController::class, 'show']);
 
 // Banners públicos (solo activos)
 Route::get('banners/active', [BannerController::class, 'active']);
+
+// Popup público
+Route::get('popup', [PopupController::class, 'index']);
 
 // Rutas de autenticación
 Route::post('login', [AuthController::class, 'login']);
@@ -73,4 +77,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('banners/{banner}', [BannerController::class, 'update']); // POST porque enviamos FormData con imagen
     Route::delete('banners/{banner}', [BannerController::class, 'destroy']);
     Route::post('banners/update-order', [BannerController::class, 'updateOrder']);
+
+    // Popup
+    Route::post('popup', [PopupController::class, 'update']);
 });

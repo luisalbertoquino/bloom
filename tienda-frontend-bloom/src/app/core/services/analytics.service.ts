@@ -1,4 +1,5 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject, PLATFORM_ID } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
 import { Observable, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { HttpBaseService } from './http-base.service';
@@ -30,15 +31,22 @@ export interface VisitResponse {
 export class AnalyticsService {
   private apiUrl = environment.apiUrl;
   private sessionId: string;
+  private platformId = inject(PLATFORM_ID);
+  private isBrowser = isPlatformBrowser(this.platformId);
 
   constructor(private httpBase: HttpBaseService) {
-    // Generar o recuperar session_id desde localStorage
-    const existingSessionId = localStorage.getItem('analytics_session_id');
-    if (existingSessionId) {
-      this.sessionId = existingSessionId;
+    // Generar o recuperar session_id desde localStorage solo en el navegador
+    if (this.isBrowser) {
+      const existingSessionId = localStorage.getItem('analytics_session_id');
+      if (existingSessionId) {
+        this.sessionId = existingSessionId;
+      } else {
+        this.sessionId = this.generateSessionId();
+        localStorage.setItem('analytics_session_id', this.sessionId);
+      }
     } else {
+      // En el servidor, usar un ID temporal
       this.sessionId = this.generateSessionId();
-      localStorage.setItem('analytics_session_id', this.sessionId);
     }
   }
 
@@ -54,6 +62,11 @@ export class AnalyticsService {
 
   // Rastrear visita a una página
   trackPageVisit(pageUrl: string, referrer: string = ''): Observable<VisitResponse | null> {
+    // No rastrear en el servidor
+    if (!this.isBrowser) {
+      return of(null);
+    }
+
     const data: VisitTrackingData = {
       page_url: pageUrl,
       referrer: referrer || document.referrer,

@@ -125,18 +125,20 @@ export class CookieManagerService {
   }
 
   cleanNonEssentialCookies(): void {
+    if (!this.isBrowser) return;
+
     const allCookies = document.cookie.split(';');
-    
+
     // Salvaguardar tokens importantes
     const xsrfToken = this.getTokenFromCookie();
-    
+
     allCookies.forEach(cookie => {
       const [name] = cookie.trim().split('=');
       if (name && !this.isEssentialCookie(name)) {
         this.deleteCookie(name);
       }
     });
-    
+
     // Restaurar tokens importantes
     if (xsrfToken) this.saveToken(xsrfToken);
   }

@@ -114,4 +114,9 @@ export class PromotionalPopupComponent implements OnInit {
     if (!path) return '';
     return this.storageUrl + path;
   }
+
+  hasOnlyImage(): boolean {
+    // Retorna true si solo hay imagen sin título, contenido ni botón
+    return !!(this.popup?.image && !this.popup?.title && !this.popup?.content && !this.popup?.button_text);
+  }
 }

@@ -18,13 +18,20 @@ class SettingController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'site_title' => 'required|string|max:255',
-            'primary_color' => 'required|string|max:20',
-            'secondary_color' => 'required|string|max:20',
-            'whatsapp_number' => 'required|string|max:20',
+            'site_title' => 'nullable|string|max:255',
+            'primary_color' => 'nullable|string|max:20',
+            'secondary_color' => 'nullable|string|max:20',
+            'whatsapp_number' => 'nullable|string|max:20',
             'banner_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'logo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'favicon' => 'nullable|file|mimes:jpeg,png,jpg,gif,ico|max:2048',
+            // Top Bar settings
+            'top_bar_active' => 'nullable|string',
+            'top_bar_message' => 'nullable|string|max:255',
+            'top_bar_countdown_enabled' => 'nullable|string',
+            'top_bar_countdown_date' => 'nullable|string',
+            'top_bar_background_color' => 'nullable|string|max:20',
+            'top_bar_text_color' => 'nullable|string|max:20',
         ]);
 
         // Guardar cada configuración

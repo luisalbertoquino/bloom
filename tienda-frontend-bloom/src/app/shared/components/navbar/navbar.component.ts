@@ -73,13 +73,18 @@ export class NavbarComponent implements OnInit, AfterViewInit, OnDestroy {
       // Escuchar eventos globales para cerrar componentes abiertos
       this.clickListener = (event: MouseEvent) => {
         // Cerrar el menú de usuario si se hace clic fuera de él
-        const userMenuElement = document.querySelector('.relative') as Node;
-        if (this.isUserMenuOpen && userMenuElement && !event.composedPath().includes(userMenuElement)) {
+        const target = event.target as HTMLElement;
+        const userMenuContainer = target.closest('.user-menu-container');
+
+        if (this.isUserMenuOpen && !userMenuContainer) {
           this.isUserMenuOpen = false;
         }
       };
-      
-      document.addEventListener('click', this.clickListener);
+
+      // Usar timeout para evitar que el click inicial cierre el menú
+      setTimeout(() => {
+        document.addEventListener('click', this.clickListener);
+      }, 0);
     }
   }
   

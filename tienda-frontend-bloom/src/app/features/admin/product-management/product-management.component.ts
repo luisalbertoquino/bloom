@@ -350,6 +350,47 @@ export class ProductManagementComponent implements OnInit {
     }
   }
 
+  adjustProductStock(product: Product, adjustment: number): void {
+    // Prevenir stock negativo
+    if (product.stock + adjustment < 0) {
+      this.errorMessage = 'El stock no puede ser negativo.';
+      setTimeout(() => this.errorMessage = '', 3000);
+      return;
+    }
+
+    this.productService.adjustStock(product.id, adjustment).subscribe({
+      next: (response) => {
+        // Actualizar el producto localmente con los valores del servidor
+        product.stock = response.stock;
+        product.available = response.available;
+
+        this.successMessage = `Stock de "${product.name}" actualizado correctamente.`;
+        setTimeout(() => this.successMessage = '', 3000);
+      },
+      error: (error) => {
+        console.error('Error adjusting stock', error);
+
+        if (error.status === 422 && error.error && error.error.message) {
+          this.errorMessage = error.error.message;
+        } else {
+          this.errorMessage = `Error al ajustar el stock de "${product.name}".`;
+        }
+
+        // Reintento automático para errores de conexión
+        if ((error.status === 0 || error.status === 431 || error.status === 419) && !this.autoRetrying) {
+          this.autoRetrying = true;
+          this.errorMessage = 'Reestableciendo conexión...';
+          setTimeout(() => {
+            this.autoRetrying = false;
+            this.adjustProductStock(product, adjustment);
+          }, 1000);
+        } else {
+          setTimeout(() => this.errorMessage = '', 3000);
+        }
+      }
+    });
+  }
+
   getCategoryName(categoryId: number): string {
     const category = this.categories.find(c => c.id === categoryId);
     return category ? category.name : 'Sin categoría';

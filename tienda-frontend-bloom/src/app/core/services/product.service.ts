@@ -290,24 +290,56 @@ export class ProductService {
   // Eliminar una imagen adicional específica del producto
   deleteProductImage(imageId: number): Observable<any> {
     const headers = this.createHeaders();
-    
+
     return this.http.delete<any>(`${this.apiUrl}/product-images/${imageId}`, {
       headers: headers,
       withCredentials: true
     }).pipe(
       catchError((error) => {
         console.error('Error al eliminar imagen:', error);
-        
+
         if (error.status === 0 || error.status === 431 || error.status === 419) {
           console.log('Error de conexión. Reintentando...');
-          return this.requestWithRetry<any>(() => 
+          return this.requestWithRetry<any>(() =>
             this.http.delete<any>(`${this.apiUrl}/product-images/${imageId}`, {
               headers: this.createHeaders(),
               withCredentials: true
             })
           );
         }
-        
+
+        return throwError(() => error);
+      })
+    );
+  }
+
+  // Ajustar stock de un producto (incrementar/decrementar)
+  adjustStock(id: number, adjustment: number): Observable<any> {
+    const headers = this.createHeaders();
+
+    return this.http.patch<any>(`${this.apiUrl}/products/${id}/adjust-stock`,
+      { adjustment },
+      {
+        headers: headers,
+        withCredentials: true
+      }
+    ).pipe(
+      catchError((error) => {
+        console.error('Error al ajustar stock:', error);
+
+        if (error.status === 0 || error.status === 431 || error.status === 419) {
+          console.log('Error de conexión. Reintentando...');
+          return this.requestWithRetry<any>(() =>
+            this.http.patch<any>(`${this.apiUrl}/products/${id}/adjust-stock`,
+              { adjustment },
+              {
+                headers: this.createHeaders(),
+                withCredentials: true
+              }
+            )
+          );
+        }
+
         return throwError(() => error);
       })
     );

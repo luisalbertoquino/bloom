@@ -189,7 +189,34 @@
             <div class="text-sm text-gray-900">{{ product.price | currency }}</div>
           </td>
           <td class="px-6 py-4 whitespace-nowrap">
-            <div class="text-sm text-gray-900">{{ product.stock }}</div>
+            <div class="flex items-center space-x-2">
+              <!-- Botón disminuir stock -->
+              <button (click)="adjustProductStock(product, -1)"
+                      [disabled]="product.stock === 0"
+                      class="p-1 rounded hover:bg-red-50 text-red-600 hover:text-red-800 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                      title="Disminuir stock">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4" />
+                </svg>
+              </button>
+
+              <!-- Valor del stock -->
+              <span class="text-sm font-semibold text-gray-900 min-w-[2rem] text-center"
+                    [class.text-red-600]="product.stock === 0"
+                    [class.text-yellow-600]="product.stock > 0 && product.stock <= 5"
+                    [class.text-green-600]="product.stock > 5">
+                {{ product.stock }}
+              </span>
+
+              <!-- Botón aumentar stock -->
+              <button (click)="adjustProductStock(product, 1)"
+                      class="p-1 rounded hover:bg-green-50 text-green-600 hover:text-green-800 transition-colors"
+                      title="Aumentar stock">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                </svg>
+              </button>
+            </div>
           </td>
           <td class="px-6 py-4 whitespace-nowrap">
             <span [class]="product.available 

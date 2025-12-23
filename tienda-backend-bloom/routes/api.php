@@ -66,6 +66,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('products/{product}', [ProductController::class, 'update']);
     Route::delete('products/{product}', [ProductController::class, 'destroy']);
     Route::patch('products/{product}/toggle-availability', [ProductController::class, 'toggleAvailability']);
+    Route::patch('products/{product}/adjust-stock', [ProductController::class, 'adjustStock']);
     
     // Blog Posts
     Route::post('blog-posts', [BlogPostController::class, 'store']);

@@ -139,7 +139,49 @@ class ProductController extends Controller
     {
         $product->available = !$product->available;
         $product->save();
-        
+
         return response()->json(['available' => $product->available]);
+    }
+
+    public function adjustStock(Request $request, Product $product)
+    {
+        $request->validate([
+            'adjustment' => 'required|integer'
+        ]);
+
+        $adjustment = $request->adjustment;
+        $newStock = $product->stock + $adjustment;
+
+        // No permitir stock negativo
+        if ($newStock < 0) {
+            return response()->json([
+                'message' => 'El stock no puede ser negativo'
+            ], 422);
+        }
+
+        $oldStock = $product->stock;
+        $product->stock = $newStock;
+
+        // Actualizar disponibilidad automáticamente según el stock
+        $product->available = $newStock > 0;
+
+        $product->save();
+
+        // Registrar el movimiento para analytics/marketing
+        \App\Models\StockMovement::create([
+            'product_id' => $product->id,
+            'type' => $adjustment > 0 ? 'increase' : 'decrease',
+            'quantity' => abs($adjustment),
+            'previous_stock' => $oldStock,
+            'new_stock' => $newStock,
+            'reason' => $adjustment < 0 ? 'sale' : 'restock',
+            'user_id' => auth()->id()
+        ]);
+
+        return response()->json([
+            'stock' => $product->stock,
+            'available' => $product->available,
+            'message' => 'Stock actualizado correctamente'
+        ]);
     }
 }

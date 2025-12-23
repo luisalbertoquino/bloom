@@ -24,9 +24,9 @@
               <div *ngFor="let banner of banners; let i = index"
                    [class.opacity-0]="currentBannerIndex !== i"
                    [class.opacity-100]="currentBannerIndex === i"
-                   class="absolute inset-0 transition-opacity duration-700 ease-in-out">
+                   class="absolute inset-0 transition-opacity duration-700 ease-in-out bg-gray-200">
                 <img [src]="getImageUrl(banner.image)" [alt]="banner.title || 'Banner'"
-                     class="w-full h-full object-cover">
+                     class="w-full h-full object-contain md:object-cover">
                 <!-- Overlay opcional con texto si existe -->
                 <div *ngIf="banner.title || banner.description"
                      class="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent flex items-end">

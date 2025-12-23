@@ -1,5 +1,5 @@
 // src/app/core/services/cart.service.ts
-import { Injectable, inject } from '@angular/core';
+import { Injectable, inject, OnDestroy } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
 import { Product } from './product.service';
 import { SettingsService } from './settings.service';
@@ -15,17 +15,24 @@ export interface CartItem {
 @Injectable({
   providedIn: 'root'
 })
-export class CartService {
+export class CartService implements OnDestroy {
   private cartItems: CartItem[] = [];
   private cartSubject = new BehaviorSubject<CartItem[]>([]);
   private platformId = inject(PLATFORM_ID);
   private isBrowser = isPlatformBrowser(this.platformId);
-  
+
   public cart = this.cartSubject.asObservable();
+
+  // Configuración de auto-vaciado (7 días en milisegundos)
+  private readonly CART_EXPIRATION_TIME = 7 * 24 * 60 * 60 * 1000;
+  private readonly CART_TIMESTAMP_KEY = 'cart_last_updated';
+  private checkExpirationInterval: any;
 
   constructor(private settingsService: SettingsService) {
     // Cargar el carrito desde localStorage si existe y estamos en el navegador
     if (this.isBrowser) {
+      this.checkAndClearExpiredCart();
+
       const savedCart = localStorage.getItem('cart');
       if (savedCart) {
         try {
@@ -37,6 +44,11 @@ export class CartService {
           localStorage.removeItem('cart');
         }
       }
+
+      // Verificar expiración cada hora
+      this.checkExpirationInterval = setInterval(() => {
+        this.checkAndClearExpiredCart();
+      }, 60 * 60 * 1000); // 1 hora
     }
   }
 
@@ -89,9 +101,42 @@ export class CartService {
     if (this.isBrowser) {
       try {
         localStorage.setItem('cart', JSON.stringify(this.cartItems));
+        // Actualizar timestamp de última modificación
+        localStorage.setItem(this.CART_TIMESTAMP_KEY, Date.now().toString());
       } catch (error) {
         console.error('Error saving cart to localStorage', error);
       }
+    }
+  }
+
+  // Verificar y limpiar carrito si ha expirado
+  private checkAndClearExpiredCart(): void {
+    if (!this.isBrowser) return;
+
+    const lastUpdated = localStorage.getItem(this.CART_TIMESTAMP_KEY);
+    if (!lastUpdated) {
+      // Si no hay timestamp pero hay carrito, establecer el timestamp ahora
+      if (localStorage.getItem('cart')) {
+        localStorage.setItem(this.CART_TIMESTAMP_KEY, Date.now().toString());
+      }
+      return;
+    }
+
+    const now = Date.now();
+    const timeSinceUpdate = now - parseInt(lastUpdated, 10);
+
+    // Si han pasado más de 7 días, vaciar el carrito
+    if (timeSinceUpdate > this.CART_EXPIRATION_TIME) {
+      console.log('Carrito expirado después de 7 días de inactividad. Vaciando...');
+      this.clearCart();
+      localStorage.removeItem(this.CART_TIMESTAMP_KEY);
+    }
+  }
+
+  // Limpiar intervalo al destruir el servicio
+  ngOnDestroy(): void {
+    if (this.checkExpirationInterval) {
+      clearInterval(this.checkExpirationInterval);
     }
   }
   

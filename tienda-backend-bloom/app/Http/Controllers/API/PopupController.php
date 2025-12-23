@@ -51,19 +51,32 @@ class PopupController extends Controller
         }
         if ($request->has('image_only_mode')) {
             $popup->image_only_mode = $request->image_only_mode;
+
+            // Si se activa el modo solo imagen, limpiar los campos de texto
+            if ($request->image_only_mode) {
+                $popup->title = null;
+                $popup->content = null;
+                $popup->button_text = null;
+                $popup->button_link = null;
+            }
         }
-        if ($request->has('title')) {
-            $popup->title = $request->title;
+
+        // Solo actualizar campos de texto si NO está en modo solo imagen
+        if (!$request->image_only_mode) {
+            if ($request->has('title')) {
+                $popup->title = $request->title;
+            }
+            if ($request->has('content')) {
+                $popup->content = $request->content;
+            }
+            if ($request->has('button_text')) {
+                $popup->button_text = $request->button_text;
+            }
+            if ($request->has('button_link')) {
+                $popup->button_link = $request->button_link;
+            }
         }
-        if ($request->has('content')) {
-            $popup->content = $request->content;
-        }
-        if ($request->has('button_text')) {
-            $popup->button_text = $request->button_text;
-        }
-        if ($request->has('button_link')) {
-            $popup->button_link = $request->button_link;
-        }
+
         if ($request->has('show_frequency')) {
             $popup->show_frequency = $request->show_frequency;
         }

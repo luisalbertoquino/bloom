@@ -7,6 +7,7 @@ use App\Http\Controllers\API\SettingController;
 use App\Http\Controllers\API\AuthController;
 use App\Http\Controllers\API\BannerController;
 use App\Http\Controllers\API\PopupController;
+use App\Http\Controllers\API\AnalyticsController;
 use Illuminate\Support\Facades\Route;
 
 // Manejo de solicitudes OPTIONS para CORS
@@ -41,6 +42,10 @@ Route::get('banners/active', [BannerController::class, 'active']);
 
 // Popup público
 Route::get('popup', [PopupController::class, 'index']);
+
+// Analytics públicos (tracking)
+Route::post('analytics/track', [AnalyticsController::class, 'track']);
+Route::put('analytics/duration/{visitId}', [AnalyticsController::class, 'updateDuration']);
 
 // Rutas de autenticación
 Route::post('login', [AuthController::class, 'login']);
@@ -80,4 +85,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Popup
     Route::post('popup', [PopupController::class, 'update']);
+
+    // Analytics dashboard
+    Route::get('analytics/dashboard', [AnalyticsController::class, 'dashboard']);
 });

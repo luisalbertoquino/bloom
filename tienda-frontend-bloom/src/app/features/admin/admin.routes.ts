@@ -25,7 +25,30 @@ export const ADMIN_ROUTES: Routes = [
       },
       {
         path: 'marketing',
-        loadComponent: () => import('./marketing/banner-management/banner-management.component').then(m => m.BannerManagementComponent)
+        loadComponent: () => import('./marketing/marketing-layout.component').then(m => m.MarketingLayoutComponent),
+        children: [
+          {
+            path: '',
+            redirectTo: 'banners',
+            pathMatch: 'full'
+          },
+          {
+            path: 'banners',
+            loadComponent: () => import('./marketing/banner-management/banner-management.component').then(m => m.BannerManagementComponent)
+          },
+          {
+            path: 'popup',
+            loadComponent: () => import('./marketing/popup-settings/popup-settings.component').then(m => m.PopupSettingsComponent)
+          },
+          {
+            path: 'barra-superior',
+            loadComponent: () => import('./marketing/top-bar-settings/top-bar-settings.component').then(m => m.TopBarSettingsComponent)
+          },
+          {
+            path: 'analytics',
+            loadComponent: () => import('./marketing/analytics/analytics.component').then(m => m.AnalyticsComponent)
+          }
+        ]
       },
       {
         path: 'ajustes',

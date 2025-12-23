@@ -788,6 +788,12 @@ export class HomeComponent implements OnInit, OnDestroy {
   nextBanner(): void {
     if (this.banners.length === 0) return;
     this.currentBannerIndex = (this.currentBannerIndex + 1) % this.banners.length;
+
+    // Reiniciar el intervalo para que no cambie inmediatamente después de hacer clic
+    if (this.bannerInterval) {
+      clearInterval(this.bannerInterval);
+      this.startBannerSlider();
+    }
   }
 
   prevBanner(): void {
@@ -795,6 +801,12 @@ export class HomeComponent implements OnInit, OnDestroy {
     this.currentBannerIndex = this.currentBannerIndex === 0
       ? this.banners.length - 1
       : this.currentBannerIndex - 1;
+
+    // Reiniciar el intervalo para que no cambie inmediatamente después de hacer clic
+    if (this.bannerInterval) {
+      clearInterval(this.bannerInterval);
+      this.startBannerSlider();
+    }
   }
 
   goToBanner(index: number): void {

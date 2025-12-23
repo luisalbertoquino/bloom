@@ -5,8 +5,8 @@
      (click)="close()">
 
   <!-- Popup Modal -->
-  <div class="popup-modal rounded-lg max-w-md w-full relative animate-popup"
-       [ngClass]="hasOnlyImage() ? '' : 'bg-white shadow-2xl'"
+  <div class="popup-modal rounded-lg w-full relative animate-popup"
+       [ngClass]="hasOnlyImage() ? 'max-w-2xl' : 'max-w-md bg-white shadow-2xl'"
        (click)="$event.stopPropagation()">
 
     <!-- Botón de cerrar -->
@@ -23,7 +23,7 @@
     <img *ngIf="popup.image"
          [src]="getImageUrl(popup.image)"
          [alt]="popup.title || 'Promoción'"
-         [ngClass]="hasOnlyImage() ? 'w-full h-auto rounded-lg object-cover' : 'w-full h-auto rounded-t-lg object-cover max-h-64'">
+         [ngClass]="hasOnlyImage() ? 'w-full aspect-square rounded-lg object-cover' : 'w-full h-auto rounded-t-lg object-cover max-h-64'">
 
     <!-- Contenido del popup (solo si hay título, contenido o botón) -->
     <div *ngIf="popup.title || popup.content || popup.button_text"

@@ -23,12 +23,22 @@
   <div *ngIf="!isLoading" class="p-6">
     <form [formGroup]="popupForm" (ngSubmit)="onSubmit()" enctype="multipart/form-data">
       <!-- Toggle de activación -->
-      <div class="mb-6 p-4 bg-gray-50 rounded-lg">
-        <label class="inline-flex items-center">
-          <input type="checkbox" formControlName="active" class="form-checkbox h-6 w-6 text-primary">
-          <span class="ml-3 text-lg font-medium text-gray-900">Activar popup</span>
-        </label>
-        <p class="text-gray-500 text-sm mt-2 ml-9">Cuando esté activo, el popup se mostrará a los visitantes según la configuración definida.</p>
+      <div class="mb-6 p-4 bg-gray-50 rounded-lg space-y-4">
+        <div>
+          <label class="inline-flex items-center">
+            <input type="checkbox" formControlName="active" class="form-checkbox h-6 w-6 text-primary">
+            <span class="ml-3 text-lg font-medium text-gray-900">Activar popup</span>
+          </label>
+          <p class="text-gray-500 text-sm mt-2 ml-9">Cuando esté activo, el popup se mostrará a los visitantes según la configuración definida.</p>
+        </div>
+
+        <div class="border-t border-gray-200 pt-4">
+          <label class="inline-flex items-center">
+            <input type="checkbox" formControlName="image_only_mode" (change)="onImageOnlyModeChange()" class="form-checkbox h-5 w-5 text-primary">
+            <span class="ml-3 text-base font-medium text-gray-900">Modo solo imagen (sin texto)</span>
+          </label>
+          <p class="text-gray-500 text-sm mt-2 ml-8">Activa este modo para mostrar únicamente la imagen en formato cuadrado grande, sin título, contenido ni botón.</p>
+        </div>
       </div>
 
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6">

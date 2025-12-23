@@ -116,7 +116,7 @@ export class PromotionalPopupComponent implements OnInit {
   }
 
   hasOnlyImage(): boolean {
-    // Retorna true si solo hay imagen sin título, contenido ni botón
-    return !!(this.popup?.image && !this.popup?.title && !this.popup?.content && !this.popup?.button_text);
+    // Retorna true si el modo solo imagen está activado
+    return this.popup?.image_only_mode === true;
   }
 }

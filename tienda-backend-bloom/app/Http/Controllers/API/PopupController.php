@@ -26,6 +26,7 @@ class PopupController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'active' => 'sometimes|boolean',
+            'image_only_mode' => 'sometimes|boolean',
             'title' => 'nullable|string|max:255',
             'content' => 'nullable|string',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
@@ -47,6 +48,9 @@ class PopupController extends Controller
         // Actualizar campos básicos
         if ($request->has('active')) {
             $popup->active = $request->active;
+        }
+        if ($request->has('image_only_mode')) {
+            $popup->image_only_mode = $request->image_only_mode;
         }
         if ($request->has('title')) {
             $popup->title = $request->title;

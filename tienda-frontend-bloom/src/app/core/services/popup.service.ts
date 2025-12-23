@@ -8,6 +8,7 @@ import { environment } from '../../../environments/environment';
 export interface PopupSetting {
   id: number;
   active: boolean;
+  image_only_mode?: boolean;
   title?: string;
   content?: string;
   image?: string;

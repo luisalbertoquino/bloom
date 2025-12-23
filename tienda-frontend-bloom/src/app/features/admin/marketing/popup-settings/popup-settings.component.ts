@@ -57,6 +57,7 @@ export class PopupSettingsComponent implements OnInit {
   initForm(): void {
     this.popupForm = this.fb.group({
       active: [false],
+      image_only_mode: [false],
       title: ['', [Validators.maxLength(255)]],
       content: [''],
       button_text: ['', [Validators.maxLength(100)]],
@@ -76,6 +77,7 @@ export class PopupSettingsComponent implements OnInit {
         if (popup) {
           this.popupForm.patchValue({
             active: popup.active,
+            image_only_mode: popup.image_only_mode || false,
             title: popup.title || '',
             content: popup.content || '',
             button_text: popup.button_text || '',
@@ -187,6 +189,7 @@ export class PopupSettingsComponent implements OnInit {
 
     const formData = new FormData();
     formData.append('active', this.popupForm.get('active')?.value ? '1' : '0');
+    formData.append('image_only_mode', this.popupForm.get('image_only_mode')?.value ? '1' : '0');
 
     const title = this.popupForm.get('title')?.value;
     const content = this.popupForm.get('content')?.value;
@@ -273,11 +276,21 @@ export class PopupSettingsComponent implements OnInit {
   }
 
   isOnlyImageMode(): boolean {
-    // Retorna true si solo hay imagen sin título, contenido ni botón
-    const title = this.popupForm.get('title')?.value;
-    const content = this.popupForm.get('content')?.value;
-    const buttonText = this.popupForm.get('button_text')?.value;
+    // Retorna true si el modo solo imagen está activado
+    return this.popupForm.get('image_only_mode')?.value === true;
+  }
 
-    return this.imagePreview !== null && !title && !content && !buttonText;
+  onImageOnlyModeChange(): void {
+    const imageOnlyMode = this.popupForm.get('image_only_mode')?.value;
+
+    if (imageOnlyMode) {
+      // Limpiar los campos de texto cuando se activa modo solo imagen
+      this.popupForm.patchValue({
+        title: '',
+        content: '',
+        button_text: '',
+        button_link: ''
+      });
+    }
   }
 }

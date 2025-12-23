@@ -1,0 +1,230 @@
+<!-- src/app/features/admin/marketing/banner-management/banner-management.component.html -->
+<div class="bg-white shadow-sm rounded-lg">
+  <!-- Encabezado -->
+  <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+    <h1 class="text-xl font-semibold text-gray-800">Gestión de Banners</h1>
+    <button (click)="addBanner()" class="bg-primary text-white px-4 py-2 rounded-md hover:bg-primary-dark transition-colors">
+      <div class="flex items-center">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+        </svg>
+        Añadir Banner
+      </div>
+    </button>
+  </div>
+
+  <!-- Mensajes de éxito/error -->
+  <div *ngIf="successMessage" class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 m-4 rounded">
+    {{ successMessage }}
+  </div>
+  <div *ngIf="errorMessage" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 m-4 rounded">
+    {{ errorMessage }}
+  </div>
+
+  <!-- Formulario (visible cuando showForm es true) -->
+  <div *ngIf="showForm" class="p-6 border-b border-gray-200">
+    <h2 class="text-lg font-medium mb-4">{{ isEditing ? 'Editar' : 'Añadir' }} Banner</h2>
+    <form [formGroup]="bannerForm" (ngSubmit)="onSubmit()" enctype="multipart/form-data">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- Título -->
+        <div>
+          <label for="title" class="block text-sm font-medium text-gray-700 mb-1">Título</label>
+          <input type="text" id="title" formControlName="title"
+                 class="w-full border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
+          <p class="text-gray-500 text-xs mt-1">Texto principal que se mostrará sobre el banner (opcional).</p>
+        </div>
+
+        <!-- Enlace -->
+        <div>
+          <label for="link" class="block text-sm font-medium text-gray-700 mb-1">Enlace</label>
+          <input type="text" id="link" formControlName="link"
+                 class="w-full border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
+          <p class="text-gray-500 text-xs mt-1">URL a la que redirigirá el banner al hacer clic (opcional).</p>
+        </div>
+
+        <!-- Orden -->
+        <div>
+          <label for="order" class="block text-sm font-medium text-gray-700 mb-1">Orden *</label>
+          <input type="number" id="order" formControlName="order" step="1" min="0"
+                 class="w-full border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
+          <div *ngIf="bannerForm.get('order')?.touched && bannerForm.get('order')?.invalid" class="text-red-500 text-sm mt-1">
+            <div *ngIf="bannerForm.get('order')?.errors?.['required']">El orden es obligatorio.</div>
+            <div *ngIf="bannerForm.get('order')?.errors?.['min']">El orden no puede ser negativo.</div>
+          </div>
+          <p class="text-gray-500 text-xs mt-1">Define el orden de visualización (menor número aparece primero).</p>
+        </div>
+
+        <!-- Imagen -->
+        <div>
+          <label for="image" class="block text-sm font-medium text-gray-700 mb-1">
+            Imagen {{ !isEditing ? '*' : '' }}
+          </label>
+          <input type="file" id="image" (change)="onFileSelected($event)" accept="image/*"
+                 class="w-full border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
+          <p class="text-gray-500 text-xs mt-1">Formatos soportados: JPG, PNG, GIF, WEBP. Máximo 2MB. Resolución recomendada: 1920x600px.</p>
+          <div *ngIf="imageError" class="text-red-500 text-sm mt-1">
+            {{ imageError }}
+          </div>
+        </div>
+
+        <!-- Estado Activo -->
+        <div>
+          <label class="inline-flex items-center mt-3">
+            <input type="checkbox" formControlName="active" class="form-checkbox h-5 w-5 text-primary">
+            <span class="ml-2 text-gray-700">Banner activo</span>
+          </label>
+          <p class="text-gray-500 text-xs mt-1">Solo los banners activos se mostrarán en el sitio web.</p>
+        </div>
+      </div>
+
+      <!-- Descripción (ocupa toda una fila) -->
+      <div class="mt-6">
+        <label for="description" class="block text-sm font-medium text-gray-700 mb-1">Descripción</label>
+        <textarea id="description" formControlName="description" rows="3"
+                  class="w-full border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"></textarea>
+        <p class="text-gray-500 text-xs mt-1">Texto secundario que se mostrará debajo del título (opcional).</p>
+      </div>
+
+      <!-- Vista previa de imagen -->
+      <div *ngIf="imagePreview" class="mt-6">
+        <label class="block text-sm font-medium text-gray-700 mb-2">Vista previa:</label>
+        <div class="relative w-full h-48 bg-gray-100 rounded-lg overflow-hidden">
+          <img [src]="imagePreview" alt="Vista previa" class="w-full h-full object-cover">
+        </div>
+      </div>
+
+      <!-- Botones del formulario -->
+      <div class="flex justify-end space-x-3 mt-6">
+        <button type="button" (click)="cancelForm()" class="border border-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-50 transition-colors">
+          Cancelar
+        </button>
+        <button type="submit" [disabled]="bannerForm.invalid || isSubmitting || imageError"
+                class="bg-primary text-white px-4 py-2 rounded-md hover:bg-primary-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+          {{ isSubmitting ? 'Guardando...' : (isEditing ? 'Actualizar' : 'Guardar') }}
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Barra de búsqueda -->
+  <div *ngIf="!showForm" class="p-6 border-b border-gray-200">
+    <div class="relative">
+      <input type="text" [(ngModel)]="searchTerm" placeholder="Buscar banners por título o descripción..."
+             (keyup.enter)="onSearch()"
+             class="w-full border border-gray-300 rounded-md py-2 px-3 pl-10 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
+      <div class="absolute left-3 top-2.5 text-gray-400">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+        </svg>
+      </div>
+    </div>
+  </div>
+
+  <!-- Estado de carga -->
+  <div *ngIf="isLoading" class="flex justify-center items-center p-12">
+    <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+  </div>
+
+  <!-- Grid de banners -->
+  <div *ngIf="!isLoading" class="p-6">
+    <div *ngIf="filteredBanners.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div *ngFor="let banner of filteredBanners" class="border border-gray-200 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+        <!-- Imagen del banner -->
+        <div class="relative h-48 bg-gray-100">
+          <img [src]="getImageUrl(banner.image)" [alt]="banner.title || 'Banner'" class="w-full h-full object-cover">
+          <!-- Badge de estado -->
+          <div class="absolute top-2 right-2">
+            <span [class]="banner.active
+                ? 'px-2 py-1 text-xs font-semibold rounded-full bg-green-500 text-white'
+                : 'px-2 py-1 text-xs font-semibold rounded-full bg-gray-500 text-white'">
+              {{ banner.active ? 'Activo' : 'Inactivo' }}
+            </span>
+          </div>
+          <!-- Badge de orden -->
+          <div class="absolute top-2 left-2">
+            <span class="px-2 py-1 text-xs font-semibold rounded-full bg-blue-500 text-white">
+              #{{ banner.order }}
+            </span>
+          </div>
+        </div>
+
+        <!-- Información del banner -->
+        <div class="p-4">
+          <h3 class="font-semibold text-gray-900 mb-1 truncate">{{ banner.title || 'Sin título' }}</h3>
+          <p class="text-sm text-gray-600 mb-3 line-clamp-2 h-10">{{ banner.description || 'Sin descripción' }}</p>
+
+          <!-- Enlace si existe -->
+          <div *ngIf="banner.link" class="mb-3">
+            <a [href]="banner.link" target="_blank" class="text-xs text-primary hover:underline truncate block">
+              {{ banner.link }}
+            </a>
+          </div>
+
+          <!-- Botones de acción -->
+          <div class="flex justify-between items-center pt-3 border-t border-gray-200">
+            <!-- Botones de orden -->
+            <div class="flex space-x-1">
+              <button (click)="moveUp(banner)"
+                      [disabled]="banners.indexOf(banner) === 0"
+                      class="text-gray-600 hover:text-gray-900 p-1 rounded hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7" />
+                </svg>
+              </button>
+              <button (click)="moveDown(banner)"
+                      [disabled]="banners.indexOf(banner) === banners.length - 1"
+                      class="text-gray-600 hover:text-gray-900 p-1 rounded hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+            </div>
+
+            <!-- Botones principales -->
+            <div class="flex space-x-2">
+              <!-- Editar -->
+              <button (click)="editBanner(banner)"
+                      class="text-indigo-600 hover:text-indigo-900 p-1 rounded hover:bg-gray-100">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                </svg>
+              </button>
+
+              <!-- Toggle Estado -->
+              <button (click)="toggleBannerStatus(banner)"
+                      [class]="banner.active
+                          ? 'text-yellow-600 hover:text-yellow-900 p-1 rounded hover:bg-gray-100'
+                          : 'text-green-600 hover:text-green-900 p-1 rounded hover:bg-gray-100'">
+                <svg *ngIf="banner.active" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <svg *ngIf="!banner.active" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </button>
+
+              <!-- Eliminar -->
+              <button (click)="deleteBanner(banner)"
+                      class="text-red-600 hover:text-red-900 p-1 rounded hover:bg-gray-100">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Si no hay banners -->
+    <div *ngIf="filteredBanners.length === 0" class="text-center py-12">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mx-auto text-gray-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+      </svg>
+      <p class="text-gray-500 mb-4">No hay banners disponibles con los filtros seleccionados.</p>
+      <button (click)="addBanner()" class="bg-primary text-white px-4 py-2 rounded-md hover:bg-primary-dark transition-colors">
+        Añadir nuevo banner
+      </button>
+    </div>
+  </div>
+</div>

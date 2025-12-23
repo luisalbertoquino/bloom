@@ -1,0 +1,8 @@
+// src/app/features/admin/marketing/banner-management/banner-management.component.scss
+
+.line-clamp-2 {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}

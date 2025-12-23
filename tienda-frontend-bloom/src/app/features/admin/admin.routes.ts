@@ -24,6 +24,10 @@ export const ADMIN_ROUTES: Routes = [
         loadComponent: () => import('./blog-management/blog-management.component').then(m => m.BlogManagementComponent)
       },
       {
+        path: 'marketing',
+        loadComponent: () => import('./marketing/banner-management/banner-management.component').then(m => m.BannerManagementComponent)
+      },
+      {
         path: 'ajustes',
         loadComponent: () => import('./settings/settings.component').then(m => m.SettingsComponent)
       }

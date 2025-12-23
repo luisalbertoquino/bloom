@@ -1,0 +1,196 @@
+<!-- src/app/features/admin/marketing/analytics/analytics.component.html -->
+<div class="bg-white shadow-sm rounded-lg">
+  <!-- Encabezado -->
+  <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+    <div>
+      <h1 class="text-xl font-semibold text-gray-800">Analytics Dashboard</h1>
+      <p class="text-gray-600 mt-1">Estadísticas de visitas y comportamiento de usuarios</p>
+    </div>
+    <button (click)="refreshAnalytics()"
+            class="bg-primary text-white px-4 py-2 rounded-md hover:bg-primary-dark transition-colors flex items-center">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+      </svg>
+      Actualizar
+    </button>
+  </div>
+
+  <!-- Mensajes de error -->
+  <div *ngIf="errorMessage" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 m-4 rounded">
+    {{ errorMessage }}
+  </div>
+
+  <!-- Estado de carga -->
+  <div *ngIf="isLoading" class="flex justify-center items-center p-12">
+    <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+  </div>
+
+  <!-- Contenido del dashboard -->
+  <div *ngIf="!isLoading && stats" class="p-6">
+    <!-- Tarjetas de resumen -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      <!-- Visitas hoy -->
+      <div class="bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg shadow-md p-6 text-white">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-blue-100 text-sm font-medium">Visitas hoy</p>
+            <p class="text-3xl font-bold mt-2">{{ stats.visits_today }}</p>
+          </div>
+          <div class="bg-blue-400 bg-opacity-50 rounded-full p-3">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      <!-- Visitas esta semana -->
+      <div class="bg-gradient-to-br from-green-500 to-green-600 rounded-lg shadow-md p-6 text-white">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-green-100 text-sm font-medium">Visitas esta semana</p>
+            <p class="text-3xl font-bold mt-2">{{ stats.visits_week }}</p>
+          </div>
+          <div class="bg-green-400 bg-opacity-50 rounded-full p-3">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      <!-- Visitas este mes -->
+      <div class="bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg shadow-md p-6 text-white">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-purple-100 text-sm font-medium">Visitas este mes</p>
+            <p class="text-3xl font-bold mt-2">{{ stats.visits_month }}</p>
+          </div>
+          <div class="bg-purple-400 bg-opacity-50 rounded-full p-3">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tiempo promedio -->
+      <div class="bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg shadow-md p-6 text-white">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-orange-100 text-sm font-medium">Tiempo promedio</p>
+            <p class="text-3xl font-bold mt-2">{{ formatDuration(stats.avg_duration) }}</p>
+          </div>
+          <div class="bg-orange-400 bg-opacity-50 rounded-full p-3">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+            </svg>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Gráficos y tablas -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <!-- Páginas más visitadas -->
+      <div class="bg-white border border-gray-200 rounded-lg shadow-sm p-6">
+        <h2 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+          Páginas más visitadas
+        </h2>
+        <div *ngIf="stats.top_pages.length > 0" class="space-y-3">
+          <div *ngFor="let page of stats.top_pages" class="flex items-center">
+            <div class="flex-1">
+              <p class="text-sm font-medium text-gray-900 truncate">{{ page.page_url }}</p>
+              <div class="mt-1 bg-gray-200 rounded-full h-2 overflow-hidden">
+                <div class="bg-primary h-2 rounded-full transition-all duration-300"
+                     [style.width.%]="getBarWidth(page.count, getMaxCount(stats.top_pages))"></div>
+              </div>
+            </div>
+            <span class="ml-4 text-sm font-semibold text-gray-700">{{ page.count }}</span>
+          </div>
+        </div>
+        <div *ngIf="stats.top_pages.length === 0" class="text-center py-8 text-gray-500">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto mb-2 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+          <p>No hay datos de páginas visitadas aún</p>
+        </div>
+      </div>
+
+      <!-- Fuentes de tráfico -->
+      <div class="bg-white border border-gray-200 rounded-lg shadow-sm p-6">
+        <h2 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+          </svg>
+          Fuentes de tráfico
+        </h2>
+        <div *ngIf="stats.top_referrers.length > 0" class="space-y-3">
+          <div *ngFor="let referrer of stats.top_referrers" class="flex items-center">
+            <div class="flex-1">
+              <div class="flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" [ngClass]="getReferrerIcon(referrer.referrer)" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
+                </svg>
+                <p class="text-sm font-medium text-gray-900">{{ getReferrerName(referrer.referrer) }}</p>
+              </div>
+              <div class="mt-1 bg-gray-200 rounded-full h-2 overflow-hidden">
+                <div class="bg-green-500 h-2 rounded-full transition-all duration-300"
+                     [style.width.%]="getBarWidth(referrer.count, getMaxCount(stats.top_referrers))"></div>
+              </div>
+            </div>
+            <span class="ml-4 text-sm font-semibold text-gray-700">{{ referrer.count }}</span>
+          </div>
+        </div>
+        <div *ngIf="stats.top_referrers.length === 0" class="text-center py-8 text-gray-500">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto mb-2 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+          </svg>
+          <p>No hay datos de fuentes de tráfico aún</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Gráfico de visitas por día -->
+    <div class="mt-6 bg-white border border-gray-200 rounded-lg shadow-sm p-6">
+      <h2 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" />
+        </svg>
+        Visitas de los últimos 7 días
+      </h2>
+      <div *ngIf="stats.visits_by_day.length > 0" class="flex items-end justify-between h-64 gap-2">
+        <div *ngFor="let day of stats.visits_by_day" class="flex-1 flex flex-col items-center">
+          <div class="flex-1 w-full flex items-end justify-center">
+            <div class="w-full bg-primary rounded-t-md transition-all duration-300 hover:bg-primary-dark relative group"
+                 [style.height.%]="getBarWidth(day.count, getMaxCount(stats.visits_by_day))">
+              <div class="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white px-2 py-1 rounded text-xs opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+                {{ day.count }} visitas
+              </div>
+            </div>
+          </div>
+          <div class="mt-2 text-xs text-gray-600 text-center">
+            {{ day.date }}
+          </div>
+        </div>
+      </div>
+      <div *ngIf="stats.visits_by_day.length === 0" class="text-center py-12 text-gray-500">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto mb-2 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" />
+        </svg>
+        <p>No hay datos de visitas diarias aún</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Si no hay estadísticas -->
+  <div *ngIf="!isLoading && !stats" class="text-center py-12">
+    <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mx-auto text-gray-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+    </svg>
+    <p class="text-gray-500 mb-4">No hay estadísticas disponibles.</p>
+  </div>
+</div>

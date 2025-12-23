@@ -1,0 +1,17 @@
+// src/app/features/admin/marketing/top-bar-settings/top-bar-settings.component.scss
+
+// Estilos para el componente de configuración de top bar
+// Utilizando principalmente Tailwind CSS
+
+input[type="color"] {
+  cursor: pointer;
+
+  &::-webkit-color-swatch-wrapper {
+    padding: 0;
+  }
+
+  &::-webkit-color-swatch {
+    border: none;
+    border-radius: 4px;
+  }
+}

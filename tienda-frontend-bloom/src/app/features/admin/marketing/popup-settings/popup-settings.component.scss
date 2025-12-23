@@ -1,0 +1,11 @@
+// src/app/features/admin/marketing/popup-settings/popup-settings.component.scss
+
+// Estilos para el componente de configuración de popup
+// Utilizando principalmente Tailwind CSS, este archivo está disponible para estilos personalizados si son necesarios
+
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}

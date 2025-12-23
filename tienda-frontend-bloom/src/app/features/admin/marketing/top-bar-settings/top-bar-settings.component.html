@@ -1,0 +1,150 @@
+<!-- src/app/features/admin/marketing/top-bar-settings/top-bar-settings.component.html -->
+<div class="bg-white shadow-sm rounded-lg">
+  <!-- Encabezado -->
+  <div class="px-6 py-4 border-b border-gray-200">
+    <h1 class="text-xl font-semibold text-gray-800">Configuración de Barra Superior</h1>
+    <p class="text-gray-600 mt-1">Personaliza la barra promocional que aparecerá en la parte superior de tu tienda</p>
+  </div>
+
+  <!-- Mensajes de éxito/error -->
+  <div *ngIf="successMessage" class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 m-4 rounded">
+    {{ successMessage }}
+  </div>
+  <div *ngIf="errorMessage" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 m-4 rounded">
+    {{ errorMessage }}
+  </div>
+
+  <!-- Estado de carga -->
+  <div *ngIf="isLoading" class="flex justify-center items-center p-12">
+    <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+  </div>
+
+  <!-- Formulario de configuración -->
+  <div *ngIf="!isLoading" class="p-6">
+    <form [formGroup]="topBarForm" (ngSubmit)="onSubmit()">
+      <!-- Toggle de activación -->
+      <div class="mb-6 p-4 bg-gray-50 rounded-lg">
+        <label class="inline-flex items-center">
+          <input type="checkbox" formControlName="active" class="form-checkbox h-6 w-6 text-primary">
+          <span class="ml-3 text-lg font-medium text-gray-900">Activar barra superior</span>
+        </label>
+        <p class="text-gray-500 text-sm mt-2 ml-9">Cuando esté activa, la barra aparecerá en la parte superior de todas las páginas de la tienda.</p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- Mensaje -->
+        <div class="md:col-span-2">
+          <label for="message" class="block text-sm font-medium text-gray-700 mb-1">Mensaje *</label>
+          <input type="text" id="message" formControlName="message"
+                 class="w-full border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
+          <div *ngIf="topBarForm.get('message')?.touched && topBarForm.get('message')?.invalid" class="text-red-500 text-sm mt-1">
+            <div *ngIf="topBarForm.get('message')?.errors?.['required']">El mensaje es obligatorio.</div>
+            <div *ngIf="topBarForm.get('message')?.errors?.['maxlength']">Máximo 255 caracteres.</div>
+          </div>
+          <p class="text-gray-500 text-xs mt-1">Texto que se mostrará en la barra (ejemplo: "¡Envío gratis en compras mayores a $50!").</p>
+        </div>
+
+        <!-- Color de fondo -->
+        <div>
+          <label for="background_color" class="block text-sm font-medium text-gray-700 mb-1">Color de fondo *</label>
+          <div class="flex items-center gap-3">
+            <input type="color" id="background_color" formControlName="background_color"
+                   class="h-10 w-20 border border-gray-300 rounded cursor-pointer">
+            <input type="text" [value]="topBarForm.get('background_color')?.value" readonly
+                   class="flex-1 border border-gray-300 rounded-md py-2 px-3 bg-gray-50">
+          </div>
+          <div *ngIf="topBarForm.get('background_color')?.touched && topBarForm.get('background_color')?.invalid" class="text-red-500 text-sm mt-1">
+            <div *ngIf="topBarForm.get('background_color')?.errors?.['required']">El color de fondo es obligatorio.</div>
+          </div>
+          <p class="text-gray-500 text-xs mt-1">Color de fondo de la barra promocional.</p>
+        </div>
+
+        <!-- Color de texto -->
+        <div>
+          <label for="text_color" class="block text-sm font-medium text-gray-700 mb-1">Color de texto *</label>
+          <div class="flex items-center gap-3">
+            <input type="color" id="text_color" formControlName="text_color"
+                   class="h-10 w-20 border border-gray-300 rounded cursor-pointer">
+            <input type="text" [value]="topBarForm.get('text_color')?.value" readonly
+                   class="flex-1 border border-gray-300 rounded-md py-2 px-3 bg-gray-50">
+          </div>
+          <div *ngIf="topBarForm.get('text_color')?.touched && topBarForm.get('text_color')?.invalid" class="text-red-500 text-sm mt-1">
+            <div *ngIf="topBarForm.get('text_color')?.errors?.['required']">El color de texto es obligatorio.</div>
+          </div>
+          <p class="text-gray-500 text-xs mt-1">Color del texto y del contador.</p>
+        </div>
+      </div>
+
+      <!-- Sección de contador -->
+      <div class="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+        <div class="mb-4">
+          <label class="inline-flex items-center">
+            <input type="checkbox" formControlName="countdown_enabled" class="form-checkbox h-5 w-5 text-primary">
+            <span class="ml-2 text-base font-medium text-gray-900">Habilitar contador regresivo</span>
+          </label>
+          <p class="text-gray-500 text-sm mt-1 ml-7">Agrega un contador de tiempo para crear urgencia en tus ofertas.</p>
+        </div>
+
+        <div *ngIf="topBarForm.get('countdown_enabled')?.value">
+          <label for="countdown_date" class="block text-sm font-medium text-gray-700 mb-1">Fecha y hora de finalización *</label>
+          <input type="datetime-local" id="countdown_date" formControlName="countdown_date"
+                 class="w-full md:w-1/2 border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
+          <div *ngIf="topBarForm.get('countdown_date')?.touched && topBarForm.get('countdown_date')?.invalid" class="text-red-500 text-sm mt-1">
+            <div *ngIf="topBarForm.get('countdown_date')?.errors?.['required']">La fecha de finalización es obligatoria cuando el contador está habilitado.</div>
+          </div>
+          <p class="text-gray-500 text-xs mt-1">Fecha y hora en la que finalizará la oferta o promoción.</p>
+        </div>
+      </div>
+
+      <!-- Preview de la barra superior -->
+      <div *ngIf="topBarForm.get('active')?.value" class="mt-8">
+        <h3 class="text-sm font-medium text-gray-900 mb-3 flex items-center">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+          </svg>
+          Vista previa de la barra superior
+        </h3>
+
+        <div class="border-2 border-dashed border-gray-300 rounded-lg p-1">
+          <div class="rounded overflow-hidden"
+               [style.background-color]="topBarForm.get('background_color')?.value"
+               [style.color]="topBarForm.get('text_color')?.value">
+            <div class="py-2 px-4 text-center">
+              <div class="flex items-center justify-center gap-3 flex-wrap">
+                <span class="text-sm font-medium">
+                  {{ topBarForm.get('message')?.value || 'Tu mensaje aparecerá aquí' }}
+                </span>
+                <span *ngIf="topBarForm.get('countdown_enabled')?.value && previewCountdown"
+                      class="text-sm font-bold px-3 py-1 rounded"
+                      [style.background-color]="topBarForm.get('text_color')?.value"
+                      [style.color]="topBarForm.get('background_color')?.value">
+                  {{ formatCountdown(previewCountdown) }}
+                </span>
+                <span *ngIf="topBarForm.get('countdown_enabled')?.value && !previewCountdown"
+                      class="text-xs italic opacity-75">
+                  (Selecciona una fecha para ver el contador)
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <p class="text-xs text-gray-500 mt-2 text-center">
+          Esta es una vista previa de cómo se verá la barra en tu tienda. El contador se actualiza en tiempo real.
+        </p>
+      </div>
+
+      <!-- Botones del formulario -->
+      <div class="flex justify-between items-center mt-6 pt-6 border-t border-gray-200">
+        <button type="button" (click)="resetToDefaults()"
+                class="border border-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-50 transition-colors">
+          Restaurar valores predeterminados
+        </button>
+        <button type="submit" [disabled]="topBarForm.invalid || isSubmitting"
+                class="bg-primary text-white px-6 py-2 rounded-md hover:bg-primary-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+          {{ isSubmitting ? 'Guardando...' : 'Guardar configuración' }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

@@ -1,0 +1,30 @@
+<!-- src/app/shared/components/top-bar/top-bar.component.html -->
+<div *ngIf="isVisible && settings"
+     class="top-bar w-full py-2 px-4 relative z-50"
+     [style.background-color]="settings.background_color"
+     [style.color]="settings.text_color">
+  <div class="container mx-auto">
+    <div class="flex items-center justify-center gap-3 flex-wrap text-sm md:text-base">
+      <!-- Mensaje -->
+      <span class="font-medium text-center">{{ settings.message }}</span>
+
+      <!-- Contador regresivo -->
+      <span *ngIf="settings.countdown_enabled && countdown"
+            class="font-bold px-3 py-1 rounded text-xs md:text-sm whitespace-nowrap"
+            [style.background-color]="settings.text_color"
+            [style.color]="settings.background_color">
+        {{ formatCountdown() }}
+      </span>
+
+      <!-- Botón de cerrar -->
+      <button (click)="close()"
+              class="ml-auto p-1 rounded hover:opacity-75 transition-opacity"
+              [style.color]="settings.text_color"
+              aria-label="Cerrar barra">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+  </div>
+</div>
